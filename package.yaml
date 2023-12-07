@@ -1,0 +1,114 @@
+name: amazonka-s3-sync
+version: 0.0.0.0
+maintainer: Patrick Brisbin
+category: Utils
+github: pbrisbin/amazonka-s3-sync
+synopsis: TODO
+description: |
+  TODO
+
+extra-doc-files:
+  - README.md
+  - CHANGELOG.md
+
+extra-source-files:
+  - package.yaml
+
+ghc-options:
+  - -Weverything
+  - -Wno-all-missed-specialisations
+  - -Wno-missed-specialisations
+  - -Wno-missing-exported-signatures # re-enables missing-signatures
+  - -Wno-missing-import-lists
+  - -Wno-missing-local-signatures
+  - -Wno-monomorphism-restriction
+  - -Wno-safe
+  - -Wno-unsafe
+
+when:
+  - condition: "impl(ghc >= 9.2)"
+    ghc-options:
+      - -Wno-missing-kind-signatures
+  - condition: "impl(ghc >= 8.10)"
+    ghc-options:
+      - -Wno-missing-safe-haskell-mode
+      - -Wno-prepositive-qualified-module
+
+dependencies:
+  - base < 5
+
+default-extensions:
+  - BangPatterns
+  - DataKinds
+  - DeriveAnyClass
+  - DeriveFoldable
+  - DeriveFunctor
+  - DeriveGeneric
+  - DeriveLift
+  - DeriveTraversable
+  - DerivingStrategies
+  - DuplicateRecordFields
+  - FlexibleContexts
+  - FlexibleInstances
+  - GADTs
+  - GeneralizedNewtypeDeriving
+  - LambdaCase
+  - MultiParamTypeClasses
+  - NoFieldSelectors
+  - NoImplicitPrelude
+  - NoMonomorphismRestriction
+  - OverloadedRecordDot
+  - OverloadedStrings
+  - RankNTypes
+  - ScopedTypeVariables
+  - StandaloneDeriving
+  - TypeApplications
+  - TypeFamilies
+
+library:
+  source-dirs: src
+  dependencies:
+    - Blammo
+    - Glob
+    - aeson
+    - amazonka
+    - amazonka-core
+    - amazonka-mtl
+    - amazonka-s3
+    - conduit
+    - containers
+    - errors
+    - exceptions
+    - filepath
+    - microlens
+    - path
+    - text
+    - time
+    - unliftio
+    - unliftio-core
+    - unliftio-path
+
+executables:
+  amazonka-s3-sync-example:
+    main: Main.hs
+    source-dirs: example
+    dependencies:
+      - amazonka
+      - amazonka-core
+      - amazonka-s3-sync
+      - path
+      - unliftio-path
+    ghc-options:
+      - -threaded
+      - -rtsopts
+      - -with-rtsopts=-N
+
+tests:
+  spec:
+    main: Spec.hs
+    source-dirs: tests
+    ghc-options: -threaded -rtsopts "-with-rtsopts=-N"
+    dependencies:
+      - amazonka-s3-sync
+      - hspec
+      - path
