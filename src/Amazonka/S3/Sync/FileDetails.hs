@@ -1,6 +1,7 @@
 module Amazonka.S3.Sync.FileDetails
   ( FileDetails (..)
   , getFileDetails
+  , getFileDetailsIfExists
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -13,14 +14,17 @@ data FileDetails = FileDetails
   }
   deriving stock (Eq, Show)
 
-getFileDetails :: MonadDirectory m => Path Abs File -> m (Maybe FileDetails)
+getFileDetails :: MonadDirectory m => Path Abs File -> m FileDetails
 getFileDetails p = do
+  FileDetails
+    <$> getFileSize p
+    <*> getModificationTime p
+
+getFileDetailsIfExists
+  :: MonadDirectory m => Path Abs File -> m (Maybe FileDetails)
+getFileDetailsIfExists p = do
   exists <- doesFileExist p
 
   if exists
-    then
-      fmap Just
-        $ FileDetails
-        <$> getFileSize p
-        <*> getModificationTime p
+    then Just <$> getFileDetails p
     else pure Nothing
