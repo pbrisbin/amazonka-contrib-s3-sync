@@ -1,7 +1,7 @@
 {-# LANGUAGE TupleSections #-}
 
 module Amazonka.S3.Sync.ActualIO
-  ( ActualIO
+  ( ActualIO (..)
   , runActualIO
   ) where
 

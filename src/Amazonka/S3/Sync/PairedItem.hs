@@ -33,22 +33,26 @@ data PairedItem details = PairedItem
   , object :: BucketKey Abs Object
   , details :: details
   }
-  deriving stock (Functor)
+  deriving stock (Eq, Show, Functor)
 
 data NoDetails = NoDetails
+  deriving stock (Eq, Show)
 
 newtype FileOnly = FileOnly
   { unwrap :: FileDetails
   }
+  deriving stock (Eq, Show)
 
 newtype ObjectOnly = ObjectOnly
   { unwrap :: ObjectAttributes
   }
+  deriving stock (Eq, Show)
 
 data FileObject = FileObject
   { fileDetails :: FileDetails
   , objectAttributes :: ObjectAttributes
   }
+  deriving stock (Eq, Show)
 
 includePairedItem :: PairedItem d -> [IncludeExclude] -> Bool
 includePairedItem p = shouldIncludePath p.file

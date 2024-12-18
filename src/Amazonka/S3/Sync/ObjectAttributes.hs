@@ -13,7 +13,7 @@ data ObjectAttributes = ObjectAttributes
   { size :: Integer
   , lastModified :: UTCTime
   }
-  deriving stock (Generic)
+  deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON)
 
 getObjectAttributes :: S3.Object -> ObjectAttributes

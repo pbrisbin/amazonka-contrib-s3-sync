@@ -17,6 +17,7 @@ data Action
   = DeleteObject (PairedItem NoDetails)
   | UpdateObject (PairedItem FileObject)
   | CreateObject (PairedItem NoDetails)
+  deriving stock (Eq, Show)
 
 shouldExecuteAction :: SyncOptions -> Action -> Bool
 shouldExecuteAction options = \case
