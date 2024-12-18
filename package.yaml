@@ -1,8 +1,8 @@
-name: amazonka-s3-sync
+name: amazonka-contrib-s3-sync
 version: 0.0.0.0
 maintainer: Patrick Brisbin
 category: Utils
-github: pbrisbin/amazonka-s3-sync
+github: pbrisbin/amazonka-contrib-s3-sync
 synopsis: TODO
 description: |
   TODO
@@ -89,13 +89,13 @@ library:
     - unliftio-core
 
 executables:
-  amazonka-s3-sync-example:
+  amazonka-contrib-s3-sync-example:
     main: Main.hs
     source-dirs: example
     dependencies:
       - amazonka
       - amazonka-core
-      - amazonka-s3-sync
+      - amazonka-contrib-s3-sync
       - path
       - path-io
     ghc-options:
@@ -111,7 +111,7 @@ tests:
     dependencies:
       - amazonka-mtl
       - amazonka-s3
-      - amazonka-s3-sync
+      - amazonka-contrib-s3-sync
       - containers
       - exceptions
       - hspec
