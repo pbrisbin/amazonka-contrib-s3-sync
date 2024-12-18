@@ -12,6 +12,7 @@ category:       Utils
 homepage:       https://github.com/pbrisbin/amazonka-contrib-s3-sync#readme
 bug-reports:    https://github.com/pbrisbin/amazonka-contrib-s3-sync/issues
 maintainer:     Patrick Brisbin
+license:        MIT
 license-file:   LICENSE
 build-type:     Simple
 extra-source-files:
