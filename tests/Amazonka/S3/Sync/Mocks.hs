@@ -65,7 +65,7 @@ instance MonadDirectory MocksM where
       | Just _ <- stripProperPrefix d file = error "TODO"
       | otherwise = ([], [])
 
-  doesFileExist = getFileDetail (const True)
+  doesFileExist f = asks $ Map.member f . (.dir)
   getFileSize = getFileDetail (.size)
   getModificationTime = getFileDetail (.mtime)
 

@@ -1,6 +1,5 @@
 module Amazonka.S3.Sync.PairedItem
   ( PairedItem (..)
-  , includePairedItem
   , NoDetails (..)
   , FileOnly (..)
   , ObjectOnly (..)
@@ -19,7 +18,6 @@ import Amazonka.S3.ListObjectsV2
 import Amazonka.S3.Sync.FileDetails
 import Amazonka.S3.Sync.Key
 import Amazonka.S3.Sync.ObjectAttributes
-import Amazonka.S3.Sync.Options.IncludeExclude
 import Amazonka.S3.Types (ObjectKey (..), object_key)
 import qualified Amazonka.S3.Types as S3
 import Conduit
@@ -53,9 +51,6 @@ data FileObject = FileObject
   , objectAttributes :: ObjectAttributes
   }
   deriving stock (Eq, Show)
-
-includePairedItem :: PairedItem d -> [IncludeExclude] -> Bool
-includePairedItem p = shouldIncludePath p.file
 
 streamPairedItems
   :: Monad m

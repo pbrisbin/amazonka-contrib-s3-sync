@@ -11,12 +11,14 @@ import Amazonka.S3.Sync.ActualIO
 import Amazonka.S3.Sync.FileDetails
 import Amazonka.S3.Sync.Key
 import Amazonka.S3.Sync.Options
+import Amazonka.S3.Sync.Options.IncludeExclude
 import Amazonka.S3.Sync.PairedItem
 import Conduit
 import Control.Monad.AWS.EnvT
 import Control.Monad.Directory
 import Control.Monad.Output
 import Control.Monad.PathsRef
+import qualified Path
 
 syncLocalRemote
   :: MonadUnliftIO m
@@ -46,17 +48,22 @@ syncLocalRemoteM options src dst = do
   runConduit
     $ do
       streamBucketKeyPairedItems src dst
-        .| filterC (`includePairedItem` options.includeExcludes)
+        .| filterMC include
         .| iterMC (recordSeen ref . (.file))
         .| toUpdateDelete
       streamDirectoryPairedItems dst src
-        .| filterC (`includePairedItem` options.includeExcludes)
+        .| filterMC include
         .| filterMC (wasn'tSeen ref . (.file))
         .| mapC CreateObject
     .| filterC (shouldExecuteAction options)
     .| iterMC logOrExecute
     .| sinkList
  where
+  include :: MonadThrow m => PairedItem details -> m Bool
+  include p = do
+    rel <- Path.stripProperPrefix src p.file
+    pure $ shouldIncludePath rel options.includeExcludes
+
   toUpdateDelete = awaitForever $ \p -> do
     mDetails <- lift $ getFileDetails p.file
 
