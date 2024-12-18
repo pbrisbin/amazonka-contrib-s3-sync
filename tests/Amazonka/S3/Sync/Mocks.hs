@@ -59,41 +59,28 @@ instance MonadOutput MocksM where
 instance MonadDirectory MocksM where
   listDir d = asks $ first nub . foldMap go . Map.keys . (.dir)
    where
-    abs :: Path Abs Dir
-    abs = asAbsDir d
-
     go :: Path Abs File -> ([Path Abs Dir], [Path Abs File])
     go file
-      | parent file == abs = ([], [file])
-      | Just _ <- stripProperPrefix abs file = error "TODO"
+      | parent file == d = ([], [file])
+      | Just _ <- stripProperPrefix d file = error "TODO"
       | otherwise = ([], [])
 
-  doesFileExist f = asks $ Map.member (asAbsFile f) . (.dir)
+  doesFileExist = getFileDetail (const True)
+  getFileSize = getFileDetail (.size)
+  getModificationTime = getFileDetail (.mtime)
 
-  getFileSize f =
-    asks
-      $ maybe (errFileDoesNotExist f) (.size)
-      . Map.lookup (asAbsFile f)
-      . (.dir)
-
-  getModificationTime f =
-    asks
-      $ maybe (errFileDoesNotExist f) (.mtime)
-      . Map.lookup (asAbsFile f)
-      . (.dir)
-
-asAbsDir :: Path b Dir -> Path Abs Dir
-asAbsDir = either (error . show) id . parseAbsDir . toFilePath
-
-asAbsFile :: Path b File -> Path Abs File
-asAbsFile = either (error . show) id . parseAbsFile . toFilePath
-
-errFileDoesNotExist :: Path b t -> a
-errFileDoesNotExist p =
-  error
-    $ "operation attempted on "
-    <> toFilePath p
-    <> ", which is not present in mocks"
+getFileDetail
+  :: MonadReader Mocks m
+  => (FileDetails -> a)
+  -> Path Abs File
+  -> m a
+getFileDetail attr f = asks $ maybe err attr . Map.lookup f . (.dir)
+ where
+  err =
+    error
+      $ "operation attempted on "
+      <> toFilePath f
+      <> ", which is not present in mocks"
 
 runMocksM :: MocksM a -> Mocks -> IO a
 runMocksM f = runReaderT f.unwrap
