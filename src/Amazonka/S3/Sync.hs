@@ -26,7 +26,7 @@ syncLocalRemote
   -> BucketKey Abs Prefix
   -> m ()
 syncLocalRemote env options src dst =
-  runEnvT (runActualIO $ syncLocalRemoteM options src dst) env
+  void $ runEnvT (runActualIO $ syncLocalRemoteM options src dst) env
 
 -- | Fully MTL version of 'syncLocalRemote', for testing
 syncLocalRemoteM
@@ -39,7 +39,7 @@ syncLocalRemoteM
   => SyncOptions
   -> Path Abs Dir
   -> BucketKey Abs Prefix
-  -> m ()
+  -> m [Action]
 syncLocalRemoteM options src dst = do
   ref <- getPathsRef
 
@@ -54,7 +54,8 @@ syncLocalRemoteM options src dst = do
         .| filterMC (wasn'tSeen ref . (.file))
         .| mapC CreateObject
     .| filterC (shouldExecuteAction options)
-    .| mapM_C logOrExecute
+    .| iterMC logOrExecute
+    .| sinkList
  where
   toUpdateDelete = awaitForever $ \p -> do
     mDetails <- lift $ getFileDetails p.file

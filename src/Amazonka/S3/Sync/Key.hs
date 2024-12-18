@@ -42,6 +42,12 @@ newtype Key b t = Key
 instance FromText (Key Abs Prefix) where
   fromText = first show . parseAbsPrefix . ObjectKey
 
+instance FromText (Key Rel Prefix) where
+  fromText = first show . parseRelPrefix . ObjectKey
+
+instance FromText (Key Abs Object) where
+  fromText = first show . parseAbsObject . ObjectKey
+
 data Object
 
 data Prefix
@@ -138,7 +144,7 @@ data BucketKey b t = BucketKey
   { bucket :: BucketName
   , key :: Key b t
   }
-  deriving stock (Show)
+  deriving stock (Eq, Show)
 
 instance ToText (Key Abs t) => ToText (BucketKey Abs t) where
   toText bk = "s3://" <> toText bk.bucket <> toText bk.key

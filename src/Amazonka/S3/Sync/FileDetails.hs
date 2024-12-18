@@ -11,6 +11,7 @@ data FileDetails = FileDetails
   { size :: Integer
   , mtime :: UTCTime
   }
+  deriving stock (Eq, Show)
 
 getFileDetails :: MonadDirectory m => Path b File -> m (Maybe FileDetails)
 getFileDetails p = do
