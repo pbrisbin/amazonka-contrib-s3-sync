@@ -82,11 +82,11 @@ library:
     - filepath
     - microlens
     - path
+    - path-io
     - text
     - time
     - unliftio
     - unliftio-core
-    - unliftio-path
 
 executables:
   amazonka-s3-sync-example:
@@ -97,7 +97,7 @@ executables:
       - amazonka-core
       - amazonka-s3-sync
       - path
-      - unliftio-path
+      - path-io
     ghc-options:
       - -threaded
       - -rtsopts

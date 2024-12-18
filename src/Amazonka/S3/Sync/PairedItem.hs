@@ -75,7 +75,7 @@ streamDirectoryPairedItems
   => BucketKey Abs Prefix
   -> Path Abs Dir
   -> ConduitT i (PairedItem NoDetails) m ()
-streamDirectoryPairedItems bk = streamPairedItems listDirectoryAbs process
+streamDirectoryPairedItems bk = streamPairedItems listDir process
  where
   process :: Path Abs Dir -> Path Abs File -> Maybe (PairedItem NoDetails)
   process d file = do
@@ -93,15 +93,6 @@ streamDirectoryPairedItems bk = streamPairedItems listDirectoryAbs process
         , object = joinBucketKey bk relKey
         , details = NoDetails
         }
-
-listDirectoryAbs
-  :: MonadDirectory m
-  => Path Abs Dir
-  -> m ([Path Abs Dir], [Path Abs File])
-listDirectoryAbs d = bimap prefix prefix <$> listDirectory d
- where
-  prefix :: [Path Rel t] -> [Path Abs t]
-  prefix = map (d </>)
 
 streamBucketKeyPairedItems
   :: (MonadThrow m, MonadAWS m)

@@ -86,11 +86,11 @@ library
     , filepath
     , microlens
     , path
+    , path-io
     , text
     , time
     , unliftio
     , unliftio-core
-    , unliftio-path
   default-language: Haskell2010
   if impl(ghc >= 9.2)
     ghc-options: -Wno-missing-kind-signatures
@@ -137,7 +137,7 @@ executable amazonka-s3-sync-example
     , amazonka-s3-sync
     , base <5
     , path
-    , unliftio-path
+    , path-io
   default-language: Haskell2010
   if impl(ghc >= 9.2)
     ghc-options: -Wno-missing-kind-signatures
