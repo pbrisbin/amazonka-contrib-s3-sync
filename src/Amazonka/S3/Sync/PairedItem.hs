@@ -52,13 +52,19 @@ data FileObject = FileObject
   }
   deriving stock (Eq, Show)
 
-streamPairedItems
+sourceRecursiveDescent
   :: Monad m
-  => (path Abs dir -> m ([path Abs dir], [a]))
-  -> (path Abs dir -> a -> Maybe (PairedItem details))
-  -> path Abs dir
-  -> ConduitT i (PairedItem details) m ()
-streamPairedItems list process top = loop top
+  => (folder -> m ([folder], [node]))
+  -- ^ List the contents of a folder as more folders or nodes
+  --
+  -- For local, folder is 'Dir' and node is 'File'. For remote, folder is
+  -- 'Prefix' and node is 'Object'
+  -> (folder -> node -> Maybe a)
+  -- ^ Action to take on each node, given the starting folder as an argument
+  -> folder
+  -- ^ Starting folder
+  -> ConduitT i a m ()
+sourceRecursiveDescent list process top = loop top
  where
   loop d = do
     (dirs, items) <- lift $ list d
@@ -70,52 +76,43 @@ streamDirectoryPairedItems
   => BucketKey Abs Prefix
   -> Path Abs Dir
   -> ConduitT i (PairedItem NoDetails) m ()
-streamDirectoryPairedItems bk = streamPairedItems listDir process
- where
-  process :: Path Abs Dir -> Path Abs File -> Maybe (PairedItem NoDetails)
-  process d file = do
-    relKey <-
-      parseRelObject
-        . ObjectKey
-        . pack
-        . toPosixPath
-        . toFilePath
-        =<< Path.stripProperPrefix d file
+streamDirectoryPairedItems bk = sourceRecursiveDescent listDir $ \d file -> do
+  relKey <-
+    parseRelObject
+      . ObjectKey
+      . pack
+      . toPosixPath
+      . toFilePath
+      =<< Path.stripProperPrefix d file
 
-    pure
-      $ PairedItem
-        { file = file
-        , object = joinBucketKey bk relKey
-        , details = NoDetails
-        }
+  pure
+    $ PairedItem
+      { file = file
+      , object = joinBucketKey bk relKey
+      , details = NoDetails
+      }
 
 streamBucketKeyPairedItems
   :: (MonadThrow m, MonadAWS m)
   => Path Abs Dir
   -> BucketKey Abs Prefix
   -> ConduitT () (PairedItem ObjectOnly) m ()
-streamBucketKeyPairedItems dir = streamPairedItems listBucketKeyAbs process
- where
-  process
-    :: BucketKey Abs Prefix
-    -> S3.Object
-    -> Maybe (PairedItem ObjectOnly)
-  process bk obj = do
-    absKey <- joinKey rootKey <$> parseRelObject (obj ^. object_key)
-    relFile <-
-      parseRelFile
-        . fromPosixPath
-        . unpack
-        . toText
-        . toObjectKey
-        =<< stripProperPrefix bk.key absKey
+streamBucketKeyPairedItems dir = sourceRecursiveDescent listBucketKeyAbs $ \bk obj -> do
+  absKey <- joinKey rootKey <$> parseRelObject (obj ^. object_key)
+  relFile <-
+    parseRelFile
+      . fromPosixPath
+      . unpack
+      . toText
+      . toObjectKey
+      =<< stripProperPrefix bk.key absKey
 
-    pure
-      $ PairedItem
-        { file = dir </> relFile
-        , object = bk {key = absKey}
-        , details = ObjectOnly $ getObjectAttributes obj
-        }
+  pure
+    $ PairedItem
+      { file = dir </> relFile
+      , object = bk {key = absKey}
+      , details = ObjectOnly $ getObjectAttributes obj
+      }
 
 listBucketKeyAbs
   :: (MonadThrow m, MonadAWS m)
