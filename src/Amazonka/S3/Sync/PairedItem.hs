@@ -138,7 +138,7 @@ listBucketKeyAbs bk = do
     .| concatC
     .| foldMapC (\obj -> maybe ([], [obj]) (\p -> ([p], [])) $ toPrefix obj)
  where
-  mPrefix = toText . fromRelPrefix <$> dropRoot bk.key
+  mPrefix = toText . fromRelPrefix <$> stripProperPrefix rootKey bk.key
 
   req =
     newListObjectsV2 bk.bucket

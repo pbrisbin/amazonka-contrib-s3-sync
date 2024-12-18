@@ -3,7 +3,8 @@ module Amazonka.S3.Sync.Prelude
   , module Amazonka.S3.Sync.Prelude
   ) where
 
-import Prelude as X
+-- "abs" is a common variable for Abs paths and keys
+import Prelude as X hiding (abs)
 
 import Amazonka.Data.Text as X (FromText (..), ToText (..))
 import Blammo.Logging as X
