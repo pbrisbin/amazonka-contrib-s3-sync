@@ -12,7 +12,6 @@ module Amazonka.S3.Sync.Key
   , joinKey
   , stripProperPrefix
   , replaceProperPrefix
-  , dropRoot
   , parseAbsPrefix
   , parseRelPrefix
   , parseAbsObject
@@ -83,12 +82,6 @@ replaceProperPrefix
   :: MonadThrow m => Key b Prefix -> Key b' Prefix -> Key b t -> m (Key b' t)
 replaceProperPrefix fromPrefix toPrefix key =
   joinKey toPrefix <$> stripProperPrefix fromPrefix key
-
-dropRoot :: Key Abs t -> Maybe (Key Rel t)
-dropRoot key = case T.uncons key.unwrap of
-  Just ('/', t) | T.null t -> Nothing
-  Just ('/', t) -> Just (Key t)
-  _ -> error "Key Abs constructed unsafely (no leading slash)"
 
 parseAbsPrefix :: MonadThrow m => ObjectKey -> m (Key Abs Prefix)
 parseAbsPrefix key
