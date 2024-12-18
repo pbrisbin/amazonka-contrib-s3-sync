@@ -93,7 +93,11 @@ spec = do
             $ PairedItem
               { file = [absfile|/src/bar.txt|]
               , object = fromTextUnsafe "s3://bucket/dst/bar.txt"
-              , details = NoDetails
+              , details =
+                  FileDetails
+                    { size = 457
+                    , mtime = makeUTCTime 2024 1 2 10 0
+                    }
               }
 
         deleteBaz :: Action
@@ -102,7 +106,11 @@ spec = do
             $ PairedItem
               { file = [absfile|/src/baz.txt|]
               , object = fromTextUnsafe "s3://bucket/dst/baz.txt"
-              , details = NoDetails
+              , details =
+                  ObjectAttributes
+                    { size = 140
+                    , lastModified = makeUTCTime 2024 1 3 11 0
+                    }
               }
 
       it "works without delete or size-only" $ do

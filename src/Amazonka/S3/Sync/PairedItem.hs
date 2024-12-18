@@ -1,11 +1,13 @@
+{-# LANGUAGE TupleSections #-}
+
 module Amazonka.S3.Sync.PairedItem
   ( PairedItem (..)
   , NoDetails (..)
   , FileOnly (..)
   , ObjectOnly (..)
   , FileObject (..)
-  , streamDirectoryPairedItems
-  , streamBucketKeyPairedItems
+  , sourceLocalPairedItems
+  , sourceRemotePairedItems
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -52,6 +54,61 @@ data FileObject = FileObject
   }
   deriving stock (Eq, Show)
 
+-- | Starting on the local side, emit local<>remote pairs
+sourceLocalPairedItems
+  :: MonadDirectory m
+  => BucketKey Abs Prefix
+  -> Path Abs Dir
+  -> ConduitT i (PairedItem FileDetails) m ()
+sourceLocalPairedItems bk =
+  sourceRecursiveDescent listDirWithDetails $ \d (file, fd) -> do
+    relKey <-
+      parseRelObject
+        . ObjectKey
+        . pack
+        . toPosixPath
+        . toFilePath
+        =<< Path.stripProperPrefix d file
+
+    pure
+      $ PairedItem
+        { file = file
+        , object = joinBucketKey bk relKey
+        , details = fd
+        }
+
+listDirWithDetails
+  :: MonadDirectory m
+  => Path Abs Dir
+  -> m ([Path Abs Dir], [(Path Abs File, FileDetails)])
+listDirWithDetails d = do
+  xs <- listDir d
+  secondM (traverse (\f -> (f,) <$> getFileDetails f)) xs
+
+-- | Starting on the remote side, emit local<>remote pairs
+sourceRemotePairedItems
+  :: (MonadThrow m, MonadAWS m)
+  => Path Abs Dir
+  -> BucketKey Abs Prefix
+  -> ConduitT () (PairedItem ObjectOnly) m ()
+sourceRemotePairedItems dir =
+  sourceRecursiveDescent listBucketKeyAbs $ \bk obj -> do
+    absKey <- joinKey rootKey <$> parseRelObject (obj ^. object_key)
+    relFile <-
+      parseRelFile
+        . fromPosixPath
+        . unpack
+        . toText
+        . toObjectKey
+        =<< stripProperPrefix bk.key absKey
+
+    pure
+      $ PairedItem
+        { file = dir </> relFile
+        , object = bk {key = absKey}
+        , details = ObjectOnly $ getObjectAttributes obj
+        }
+
 sourceRecursiveDescent
   :: Monad m
   => (folder -> m ([folder], [node]))
@@ -70,49 +127,6 @@ sourceRecursiveDescent list process top = loop top
     (dirs, items) <- lift $ list d
     yieldMany items .| concatMapC (process top)
     traverse_ loop dirs
-
-streamDirectoryPairedItems
-  :: MonadDirectory m
-  => BucketKey Abs Prefix
-  -> Path Abs Dir
-  -> ConduitT i (PairedItem NoDetails) m ()
-streamDirectoryPairedItems bk = sourceRecursiveDescent listDir $ \d file -> do
-  relKey <-
-    parseRelObject
-      . ObjectKey
-      . pack
-      . toPosixPath
-      . toFilePath
-      =<< Path.stripProperPrefix d file
-
-  pure
-    $ PairedItem
-      { file = file
-      , object = joinBucketKey bk relKey
-      , details = NoDetails
-      }
-
-streamBucketKeyPairedItems
-  :: (MonadThrow m, MonadAWS m)
-  => Path Abs Dir
-  -> BucketKey Abs Prefix
-  -> ConduitT () (PairedItem ObjectOnly) m ()
-streamBucketKeyPairedItems dir = sourceRecursiveDescent listBucketKeyAbs $ \bk obj -> do
-  absKey <- joinKey rootKey <$> parseRelObject (obj ^. object_key)
-  relFile <-
-    parseRelFile
-      . fromPosixPath
-      . unpack
-      . toText
-      . toObjectKey
-      =<< stripProperPrefix bk.key absKey
-
-  pure
-    $ PairedItem
-      { file = dir </> relFile
-      , object = bk {key = absKey}
-      , details = ObjectOnly $ getObjectAttributes obj
-      }
 
 listBucketKeyAbs
   :: (MonadThrow m, MonadAWS m)

@@ -14,9 +14,9 @@ import Amazonka.S3.Sync.PairedItem
 import Control.Monad.Output
 
 data Action
-  = DeleteObject (PairedItem NoDetails)
+  = DeleteObject (PairedItem ObjectAttributes)
   | UpdateObject (PairedItem FileObject)
-  | CreateObject (PairedItem NoDetails)
+  | CreateObject (PairedItem FileDetails)
   deriving stock (Eq, Show)
 
 shouldExecuteAction :: SyncOptions -> Action -> Bool

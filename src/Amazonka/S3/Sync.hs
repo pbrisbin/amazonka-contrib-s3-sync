@@ -47,11 +47,11 @@ syncLocalRemoteM options src dst = do
 
   runConduit
     $ do
-      streamBucketKeyPairedItems src dst
+      sourceRemotePairedItems src dst
         .| filterMC include
         .| iterMC (recordSeen ref . (.file))
         .| toUpdateDelete
-      streamDirectoryPairedItems dst src
+      sourceLocalPairedItems dst src
         .| filterMC include
         .| filterMC (wasn'tSeen ref . (.file))
         .| mapC CreateObject
@@ -64,11 +64,13 @@ syncLocalRemoteM options src dst = do
     rel <- Path.stripProperPrefix src p.file
     pure $ shouldIncludePath rel options.includeExcludes
 
+  toUpdateDelete
+    :: MonadDirectory m => ConduitT (PairedItem ObjectOnly) Action m ()
   toUpdateDelete = awaitForever $ \p -> do
-    mDetails <- lift $ getFileDetails p.file
+    mDetails <- lift $ getFileDetailsIfExists p.file
 
     yield $ case mDetails of
-      Nothing -> DeleteObject $ NoDetails <$ p
+      Nothing -> DeleteObject $ (.unwrap) <$> p
       Just fd -> UpdateObject $ FileObject fd . (.unwrap) <$> p
 
   logOrExecute
