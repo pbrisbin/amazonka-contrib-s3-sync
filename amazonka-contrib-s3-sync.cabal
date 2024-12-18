@@ -4,13 +4,13 @@ cabal-version: 1.18
 --
 -- see: https://github.com/sol/hpack
 
-name:           amazonka-s3-sync
+name:           amazonka-contrib-s3-sync
 version:        0.0.0.0
 synopsis:       TODO
 description:    TODO
 category:       Utils
-homepage:       https://github.com/pbrisbin/amazonka-s3-sync#readme
-bug-reports:    https://github.com/pbrisbin/amazonka-s3-sync/issues
+homepage:       https://github.com/pbrisbin/amazonka-contrib-s3-sync#readme
+bug-reports:    https://github.com/pbrisbin/amazonka-contrib-s3-sync/issues
 maintainer:     Patrick Brisbin
 license-file:   LICENSE
 build-type:     Simple
@@ -22,7 +22,7 @@ extra-doc-files:
 
 source-repository head
   type: git
-  location: https://github.com/pbrisbin/amazonka-s3-sync
+  location: https://github.com/pbrisbin/amazonka-contrib-s3-sync
 
 library
   exposed-modules:
@@ -40,7 +40,7 @@ library
       Control.Monad.Output
       Control.Monad.PathsRef
   other-modules:
-      Paths_amazonka_s3_sync
+      Paths_amazonka_contrib_s3_sync
   hs-source-dirs:
       src
   default-extensions:
@@ -98,10 +98,10 @@ library
   if impl(ghc >= 8.10)
     ghc-options: -Wno-missing-safe-haskell-mode -Wno-prepositive-qualified-module
 
-executable amazonka-s3-sync-example
+executable amazonka-contrib-s3-sync-example
   main-is: Main.hs
   other-modules:
-      Paths_amazonka_s3_sync
+      Paths_amazonka_contrib_s3_sync
   hs-source-dirs:
       example
   default-extensions:
@@ -134,8 +134,8 @@ executable amazonka-s3-sync-example
   ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       amazonka
+    , amazonka-contrib-s3-sync
     , amazonka-core
-    , amazonka-s3-sync
     , base <5
     , path
     , path-io
@@ -153,7 +153,7 @@ test-suite spec
       Amazonka.S3.Sync.Mocks
       Amazonka.S3.Sync.Options.IncludeExcludeSpec
       Amazonka.S3.SyncSpec
-      Paths_amazonka_s3_sync
+      Paths_amazonka_contrib_s3_sync
   hs-source-dirs:
       tests
   default-extensions:
@@ -185,9 +185,9 @@ test-suite spec
       TypeFamilies
   ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts "-with-rtsopts=-N"
   build-depends:
-      amazonka-mtl
+      amazonka-contrib-s3-sync
+    , amazonka-mtl
     , amazonka-s3
-    , amazonka-s3-sync
     , base <5
     , containers
     , exceptions
