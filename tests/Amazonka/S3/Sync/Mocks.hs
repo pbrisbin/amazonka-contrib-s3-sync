@@ -28,13 +28,13 @@ import Control.Monad.Output
 import Control.Monad.PathsRef
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks, runReader)
 import Data.Char (isDigit)
-import Data.List (foldl')
+import Data.List (nub)
 import Data.List.NonEmpty (nonEmpty)
 import qualified Data.List.NonEmpty as NE
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Time.Format.ISO8601 (formatReadP, iso8601Format)
-import Path (parent, reldir, stripProperPrefix)
+import Path (parent, stripProperPrefix)
 import Test.Hspec
 import Text.ParserCombinators.ReadP
 import qualified Prelude as Unsafe (read)
@@ -57,22 +57,16 @@ instance MonadOutput MocksM where
   puts _ = pure ()
 
 instance MonadDirectory MocksM where
-  listDirectory d = asks $ foldl' go ([], []) . Map.keys . (.dir)
+  listDir d = asks $ first nub . foldMap go . Map.keys . (.dir)
    where
-    go
-      :: ([Path Rel Dir], [Path Rel File])
-      -> Path Abs File
-      -> ([Path Rel Dir], [Path Rel File])
-    go acc@(dirs, files) file = fromMaybe acc $ do
-      f <- stripProperPrefix (asAbsDir d) file
-      let p = parent f
+    abs :: Path Abs Dir
+    abs = asAbsDir d
 
-      if p == [reldir|.|]
-        then pure (dirs, files <> [f])
-        else
-          if p `notElem` dirs
-            then pure (dirs <> [p], files)
-            else pure acc
+    go :: Path Abs File -> ([Path Abs Dir], [Path Abs File])
+    go file
+      | parent file == abs = ([], [file])
+      | Just _ <- stripProperPrefix abs file = error "TODO"
+      | otherwise = ([], [])
 
   doesFileExist f = asks $ Map.member (asAbsFile f) . (.dir)
 
