@@ -1,5 +1,4 @@
 {-# LANGUAGE DerivingVia #-}
-{-# LANGUAGE QuasiQuotes #-}
 
 -- | MTL machinery for mocking SyncSpec
 module Amazonka.S3.Sync.Mocks
