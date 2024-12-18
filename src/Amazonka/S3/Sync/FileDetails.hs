@@ -13,7 +13,7 @@ data FileDetails = FileDetails
   }
   deriving stock (Eq, Show)
 
-getFileDetails :: MonadDirectory m => Path b File -> m (Maybe FileDetails)
+getFileDetails :: MonadDirectory m => Path Abs File -> m (Maybe FileDetails)
 getFileDetails p = do
   exists <- doesFileExist p
 
