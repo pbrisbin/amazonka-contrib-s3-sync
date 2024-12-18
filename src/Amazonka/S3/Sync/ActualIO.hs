@@ -44,7 +44,6 @@ instance MonadIO m => MonadDirectory (ActualIO m) where
     checkDir = UnliftIO.doesDirectoryExist . (dfp FilePath.</>)
     checkFile = UnliftIO.doesFileExist . (dfp FilePath.</>)
 
-  doesDirectoryExist = UnliftIO.Path.doesDirectoryExist
   doesFileExist = UnliftIO.Path.doesFileExist
   getFileSize = UnliftIO.Path.getFileSize
   getModificationTime = UnliftIO.Path.getModificationTime
