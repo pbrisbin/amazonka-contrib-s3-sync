@@ -74,8 +74,6 @@ instance MonadDirectory MocksM where
             then pure (dirs <> [p], files)
             else pure acc
 
-  doesDirectoryExist = undefined
-
   doesFileExist f = asks $ Map.member (asAbsFile f) . (.dir)
 
   getFileSize f =
