@@ -13,6 +13,7 @@ import System.FilePath.Glob (match)
 data IncludeExclude
   = Include Pattern
   | Exclude Pattern
+  deriving stock (Eq, Show)
 
 shouldIncludePath :: Path b t -> [IncludeExclude] -> Bool
 shouldIncludePath (toFilePath -> fpath) =

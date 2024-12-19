@@ -1,3 +1,5 @@
+{-# OPTIONS_GHC -Wno-orphans #-}
+
 module Amazonka.S3.Sync.Prelude
   ( module X
   , module Amazonka.S3.Sync.Prelude
@@ -11,6 +13,7 @@ import Blammo.Logging as X
 import Control.Error.Util as X (hush, note)
 import Control.Monad as X (filterM, guard, join, unless, void, when, (<=<))
 import Control.Monad.AWS as X (MonadAWS)
+import Control.Monad.Catch as X (MonadThrow (..))
 import Control.Monad.IO.Class as X (MonadIO (..))
 import Control.Monad.IO.Unlift as X (MonadUnliftIO)
 import Data.Aeson as X (ToJSON)
@@ -21,6 +24,7 @@ import Data.Function as X ((&))
 import Data.List.NonEmpty as X (NonEmpty (..))
 import Data.Maybe as X (fromMaybe)
 import Data.Text as X (Text, pack, unpack)
+import Data.These as X
 import Data.Time as X (UTCTime)
 import Data.Traversable as X (for)
 import GHC.Generics as X (Generic)
@@ -48,3 +52,6 @@ firstM f = bimapM f pure
 secondM
   :: (Applicative f, Bitraversable t) => (b -> f b') -> t a b -> f (t a b')
 secondM = bimapM pure
+
+instance ToText (Path b t) where
+  toText = pack . toFilePath

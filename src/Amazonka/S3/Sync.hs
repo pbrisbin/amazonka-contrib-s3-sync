@@ -1,6 +1,8 @@
+{-# LANGUAGE TupleSections #-}
+
 module Amazonka.S3.Sync
-  ( syncLocalRemote
-  , syncLocalRemoteM
+  ( sync
+  , syncM
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -8,71 +10,106 @@ import Amazonka.S3.Sync.Prelude
 import qualified Amazonka
 import Amazonka.S3.Sync.Action
 import Amazonka.S3.Sync.ActualIO
-import Amazonka.S3.Sync.FileDetails
-import Amazonka.S3.Sync.Key
+import Amazonka.S3.Sync.Folder
+import Amazonka.S3.Sync.Item
 import Amazonka.S3.Sync.Options
-import Amazonka.S3.Sync.Options.IncludeExclude
-import Amazonka.S3.Sync.PairedItem
+import Amazonka.S3.Sync.PairUp
+import Amazonka.S3.Sync.SharedPath
+import Amazonka.S3.Sync.Source
+import Amazonka.S3.Sync.Target
 import Conduit
 import Control.Monad.AWS.EnvT
 import Control.Monad.Directory
 import Control.Monad.Output
-import Control.Monad.PathsRef
-import qualified Path
 
-syncLocalRemote
-  :: MonadUnliftIO m
-  => Amazonka.Env
-  -> SyncOptions
-  -> Path Abs Dir
-  -> BucketKey Abs Prefix
-  -> m ()
-syncLocalRemote env options src dst =
-  void $ runEnvT (runActualIO $ syncLocalRemoteM options src dst) env
+sync :: MonadUnliftIO m => Amazonka.Env -> SyncOptions -> m ()
+sync env options = void $ runEnvT (runActualIO $ syncM options) env
 
--- | Fully MTL version of 'syncLocalRemote', for testing
-syncLocalRemoteM
+-- | Fully MTL version of 'sync'
+syncM
   :: ( MonadThrow m
      , MonadAWS m
      , MonadDirectory m
-     , MonadPathsRef m
      , MonadOutput m
+     , ListSource m SyncSourceLocal
+     , ListSource m SyncSourceRemote
+     , ListTarget m SyncTargetLocal
+     , ListTarget m SyncTargetRemote
      )
   => SyncOptions
-  -> Path Abs Dir
-  -> BucketKey Abs Prefix
   -> m [Action]
-syncLocalRemoteM options src dst = do
-  ref <- getPathsRef
+syncM options = do
+  let source = case options.arguments of
+        SyncTo a b -> sourceSyncBetween a b $ These a b
+        SyncFrom a b -> sourceSyncBetween a b $ These a b
+        SyncBetween a b -> sourceSyncBetween a b $ These a b
 
   runConduit
-    $ do
-      sourceRemotePairedItems src dst
-        .| filterMC include
-        .| iterMC (recordSeen ref . (.file))
-        .| toUpdateDelete
-      sourceLocalPairedItems dst src
-        .| filterMC include
-        .| filterMC (wasn'tSeen ref . (.file))
-        .| mapC CreateObject
-    .| filterC (shouldExecuteAction options)
+    $ source
+    .| concatMapC (getSyncAction options)
     .| iterMC logOrExecute
     .| sinkList
  where
-  include :: MonadThrow m => PairedItem details -> m Bool
-  include p = do
-    rel <- Path.stripProperPrefix src p.file
-    pure $ shouldIncludePath rel options.includeExcludes
-
-  toUpdateDelete
-    :: MonadDirectory m => ConduitT (PairedItem ObjectOnly) Action m ()
-  toUpdateDelete = awaitForever $ \p -> do
-    mDetails <- lift $ getFileDetailsIfExists p.file
-
-    yield $ case mDetails of
-      Nothing -> DeleteObject $ (.unwrap) <$> p
-      Just fd -> UpdateObject $ FileObject fd . (.unwrap) <$> p
-
   logOrExecute
     | options.dryRun == DryRun = logAction "(dryrun) "
     | otherwise = executeAction options
+
+sourceSyncBetween
+  :: ( MonadThrow m
+     , MonadAWS m
+     , MonadDirectory m
+     , ToSharedPath SyncItem source
+     , ToSharedPath SyncItem target
+     , ToSharedPath SyncFolder source
+     , ToSharedPath SyncFolder target
+     , ListSource m s
+     , ListTarget m t
+     )
+  => source
+  -> target
+  -> These s t
+  -> ConduitT i (These SyncItem SyncItem) m ()
+sourceSyncBetween topSource topTarget inputs = do
+  ((sFolders, sItems), (tFolders, tItems)) <- lift $ case inputs of
+    This s -> (,([], [])) <$> listSource s
+    That t -> (([], []),) <$> listTarget t
+    These s t -> (,) <$> listSource s <*> listTarget t
+
+  traverse_ (sourceSyncBetween topSource topTarget)
+    =<< pairUpM
+      ( \sFolder tFolder ->
+          compare
+            <$> toSharedPath topSource sFolder
+            <*> toSharedPath topTarget tFolder
+      )
+      sFolders
+      tFolders
+
+  yieldMany
+    =<< pairUpM
+      ( \sItem tItem ->
+          compare
+            <$> toSharedPath topSource sItem
+            <*> toSharedPath topTarget tItem
+      )
+      sItems
+      tItems
+
+getSyncAction
+  :: SyncOptions
+  -> These SyncItem SyncItem
+  -> Maybe Action
+getSyncAction options = \case
+  This source -> do
+    guard $ shouldInclude source
+    pure $ CreateTarget source
+  That target -> do
+    guard $ shouldInclude target
+    guard $ options.delete == Delete
+    pure $ DeleteTarget target
+  These source target -> do
+    guard $ shouldInclude source
+    guard $ shouldInclude target
+    guard $ source.size /= target.size
+    guard $ options.sizeOnly == SizeOnly || source.mtime > target.mtime
+    Just $ UpdateTarget source target
