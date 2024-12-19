@@ -76,14 +76,13 @@ library:
     - amazonka-mtl
     - amazonka-s3
     - conduit
-    - containers
     - errors
     - exceptions
-    - filepath
     - microlens
     - path
     - path-io
     - text
+    - these
     - time
     - unliftio
     - unliftio-core
@@ -113,7 +112,6 @@ tests:
       - amazonka-s3
       - amazonka-contrib-s3-sync
       - containers
-      - exceptions
       - hspec
       - mtl
       - path

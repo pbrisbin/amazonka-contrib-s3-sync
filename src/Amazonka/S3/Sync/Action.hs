@@ -1,46 +1,29 @@
 module Amazonka.S3.Sync.Action
   ( Action (..)
-  , shouldExecuteAction
-  , executeAction
   , logAction
+  , executeAction
   ) where
 
 import Amazonka.S3.Sync.Prelude
 
-import Amazonka.S3.Sync.FileDetails
-import Amazonka.S3.Sync.ObjectAttributes
 import Amazonka.S3.Sync.Options
-import Amazonka.S3.Sync.PairedItem
+import Amazonka.S3.Sync.Source
 import Control.Monad.Output
 
 data Action
-  = DeleteObject (PairedItem ObjectAttributes)
-  | UpdateObject (PairedItem FileObject)
-  | CreateObject (PairedItem FileDetails)
+  = DeleteTarget SyncItem
+  | UpdateTarget SyncItem SyncItem
+  | CreateTarget SyncItem
   deriving stock (Eq, Show)
 
-shouldExecuteAction :: SyncOptions -> Action -> Bool
-shouldExecuteAction options = \case
-  DeleteObject {} | options.delete == Delete -> True
-  UpdateObject p
-    | p.details.fileDetails.size /= p.details.objectAttributes.size
-    , options.sizeOnly == SizeOnly ->
-        True
-    | p.details.fileDetails.size /= p.details.objectAttributes.size
-    , p.details.fileDetails.mtime > p.details.objectAttributes.lastModified ->
-        True
-  CreateObject {} -> True
-  _ -> False
+instance ToText Action where
+  toText = \case
+    DeleteTarget a -> "delete: " <> toText a
+    UpdateTarget a b -> "upload: " <> toText a <> " to " <> toText b
+    CreateTarget a -> "upload: " <> toText a <> " to ???"
+
+logAction :: MonadOutput m => Text -> Action -> m ()
+logAction prefix = puts . (prefix <>) . toText
 
 executeAction :: MonadOutput m => SyncOptions -> Action -> m ()
 executeAction _ = logAction ""
-
-logAction :: MonadOutput m => Text -> Action -> m ()
-logAction prefix =
-  puts . (prefix <>) . \case
-    DeleteObject p ->
-      "delete: " <> toText p.object
-    UpdateObject p ->
-      "upload: " <> pack (toFilePath p.file) <> " to " <> toText p.object
-    CreateObject p ->
-      "upload: " <> pack (toFilePath p.file) <> " to " <> toText p.object
