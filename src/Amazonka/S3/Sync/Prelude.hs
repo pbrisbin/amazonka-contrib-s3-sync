@@ -21,6 +21,7 @@ import Data.Bifunctor as X (bimap, first, second)
 import Data.Bitraversable as X (Bitraversable, bimapM)
 import Data.Foldable as X (for_, traverse_)
 import Data.Function as X ((&))
+import Data.Kind as X (Type)
 import Data.List.NonEmpty as X (NonEmpty (..))
 import Data.Maybe as X (fromMaybe)
 import Data.Text as X (Text, pack, unpack)
@@ -52,6 +53,14 @@ firstM f = bimapM f pure
 secondM
   :: (Applicative f, Bitraversable t) => (b -> f b') -> t a b -> f (t a b')
 secondM = bimapM pure
+
+panic :: MonadThrow m => String -> m a
+panic msg =
+  throwM
+    $ userError
+    $ "panic! "
+      <> msg
+      <> ".\nPlease report this at https://github.com/pbrisbin/amazonka-contrib-s3-sync/issues"
 
 instance ToText (Path b t) where
   toText = pack . toFilePath

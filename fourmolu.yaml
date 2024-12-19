@@ -12,4 +12,5 @@ in-style: left-align
 single-constraint-parens: never # ignored until v12 / ghc-9.6
 unicode: never # default
 respectful: true # default
-fixities: [] # default
+fixities:
+  - "infixl 0 $"

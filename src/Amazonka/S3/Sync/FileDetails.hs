@@ -1,7 +1,10 @@
+{-# LANGUAGE TupleSections #-}
+
 module Amazonka.S3.Sync.FileDetails
   ( FileDetails (..)
   , getFileDetails
   , getFileDetailsIfExists
+  , listDirWithFileDetails
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -28,3 +31,10 @@ getFileDetailsIfExists p = do
   if exists
     then Just <$> getFileDetails p
     else pure Nothing
+
+listDirWithFileDetails
+  :: MonadDirectory m
+  => Path Abs Dir
+  -> m ([Path Abs Dir], [(Path Abs File, FileDetails)])
+listDirWithFileDetails =
+  secondM (traverse $ \f -> (f,) <$> getFileDetails f) <=< listDir
