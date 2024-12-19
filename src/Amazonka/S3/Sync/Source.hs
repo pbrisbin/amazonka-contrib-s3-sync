@@ -1,55 +1,80 @@
-{-# LANGUAGE DuplicateRecordFields #-}
+{-# LANGUAGE NamedFieldPuns #-}
 
 module Amazonka.S3.Sync.Source
-  ( SyncSourceLocal (..)
-  , SyncSourceRemote (..)
-  , SyncItem (..)
-  , ListSource (..)
+  ( sourceLocalRemote
+  , sourceRemoteLocal
+  , sourceRemoteRemote
   ) where
 
 import Amazonka.S3.Sync.Prelude
 
-import Amazonka.S3.Sync.Folder
+import Amazonka.S3.Sync.FileDetails
 import Amazonka.S3.Sync.Item
 import Amazonka.S3.Sync.Key
-import Amazonka.S3.Sync.LocalFile
-import Amazonka.S3.Sync.RemoteObject
-import Amazonka.S3.Sync.RemotePrefix
-import Amazonka.S3.Sync.SharedPath
+import Amazonka.S3.Sync.Logic
+import Amazonka.S3.Sync.ObjectAttributes
+import Conduit
 import Control.Monad.Directory
 
-newtype SyncSourceLocal = SyncSourceLocal
-  { unwrap :: Path Abs Dir
-  }
-  deriving stock (Eq, Show)
-  deriving newtype
-    ( ListSource m
-    , ToSharedPath SyncFolder
-    , ToSharedPath SyncItem
-    )
+sourceLocalRemote
+  :: (MonadThrow m, MonadDirectory m, MonadAWS m)
+  => Path Abs Dir
+  -> BucketKey Abs Prefix
+  -> ConduitT i (These (SyncItem Path File) (SyncItem Key Object)) m ()
+sourceLocalRemote = runSyncLogic localRemoteLogic
 
-newtype SyncSourceRemote = SyncSourceRemote
-  { unwrap :: BucketKey Abs Prefix
-  }
-  deriving stock (Eq, Show)
-  deriving newtype
-    ( ToRemotePrefix
-    , ListSource m
-    , ToSharedPath SyncFolder
-    , ToSharedPath SyncItem
-    )
+sourceRemoteLocal
+  :: Monad m
+  => BucketKey Abs Prefix
+  -> Path Abs Dir
+  -> ConduitT i (These (SyncItem Key Object) (SyncItem Path File)) m ()
+sourceRemoteLocal = runSyncLogic remoteLocalLogic
 
-class ListSource m s where
-  listSource :: s -> m ([SyncFolder], [SyncItem])
+sourceRemoteRemote
+  :: Monad m
+  => BucketKey Abs Prefix
+  -> BucketKey Abs Prefix
+  -> ConduitT i (These (SyncItem Key Object) (SyncItem Key Object)) m ()
+sourceRemoteRemote = runSyncLogic remoteRemoteLogic
 
-instance (MonadThrow m, MonadDirectory m) => ListSource m (Path Abs Dir) where
-  listSource = listLocalFiles
+localRemoteLogic
+  :: (MonadThrow m, MonadDirectory m, MonadAWS m)
+  => SyncLogic
+      m
+      (Path Abs Dir)
+      (Path Abs File, FileDetails)
+      (SyncItem Path File)
+      (BucketKey Abs Prefix)
+      (Key Abs Object, ObjectAttributes)
+      (SyncItem Key Object)
+localRemoteLogic =
+  SyncLogic
+    { listSource = listDirWithFileDetails
+    , listTarget = listPrefixWithObjectAttributes
+    , toSourceItem = syncItemFile
+    , toTargetItem = syncItemObject
+    , compareDir = undefined
+    , compareItem = compareSyncItems
+    }
 
-instance (MonadThrow m, MonadAWS m) => ListSource m (BucketKey Abs Prefix) where
-  listSource = listRemoteObjects
+remoteLocalLogic
+  :: SyncLogic
+      m
+      (BucketKey Abs Prefix)
+      (Key Abs Object, ObjectAttributes)
+      (SyncItem Key Object)
+      (Path Abs Dir)
+      (Path Abs File, FileDetails)
+      (SyncItem Path File)
+remoteLocalLogic = undefined
 
-instance (ListSource m a, ListSource m b) => ListSource m (Either a b) where
-  listSource = either listSource listSource
-
-instance (MonadThrow m, MonadDirectory m, MonadAWS m) => ListSource m SyncFolder where
-  listSource = listSource . (.unwrap)
+remoteRemoteLogic
+  :: SyncLogic
+      m
+      (BucketKey Abs Prefix)
+      (Key Abs Object, ObjectAttributes)
+      (SyncItem Key Object)
+      (BucketKey Abs Prefix)
+      (Key Abs Object, ObjectAttributes)
+      (SyncItem Key Object)
+remoteRemoteLogic = undefined

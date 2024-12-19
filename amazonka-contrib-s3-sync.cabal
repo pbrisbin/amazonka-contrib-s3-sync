@@ -31,20 +31,15 @@ library
       Amazonka.S3.Sync.Action
       Amazonka.S3.Sync.ActualIO
       Amazonka.S3.Sync.FileDetails
-      Amazonka.S3.Sync.Folder
       Amazonka.S3.Sync.Item
       Amazonka.S3.Sync.Key
-      Amazonka.S3.Sync.LocalFile
+      Amazonka.S3.Sync.Logic
       Amazonka.S3.Sync.ObjectAttributes
       Amazonka.S3.Sync.Options
       Amazonka.S3.Sync.Options.IncludeExclude
       Amazonka.S3.Sync.PairUp
       Amazonka.S3.Sync.Prelude
-      Amazonka.S3.Sync.RemoteObject
-      Amazonka.S3.Sync.RemotePrefix
-      Amazonka.S3.Sync.SharedPath
       Amazonka.S3.Sync.Source
-      Amazonka.S3.Sync.Target
       Control.Monad.Directory
       Control.Monad.Output
   other-modules:

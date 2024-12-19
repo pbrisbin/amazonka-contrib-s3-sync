@@ -36,7 +36,7 @@ import UnliftIO.Exception (Exception)
 newtype Key b t = Key
   { unwrap :: Text
   }
-  deriving stock (Show, Eq)
+  deriving stock (Show, Eq, Ord)
   deriving newtype (ToText)
 
 instance FromText (Key Abs Prefix) where
@@ -144,7 +144,7 @@ data BucketKey b t = BucketKey
   { bucket :: BucketName
   , key :: Key b t
   }
-  deriving stock (Eq, Show)
+  deriving stock (Show, Eq, Ord)
 
 instance ToText (Key b t) => ToText (BucketKey b t) where
   toText bk = "s3://" <> toText bk.bucket <> toText bk.key

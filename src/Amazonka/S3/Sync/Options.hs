@@ -8,9 +8,8 @@ module Amazonka.S3.Sync.Options
 
 import Amazonka.S3.Sync.Prelude
 
+import Amazonka.S3.Sync.Key
 import Amazonka.S3.Sync.Options.IncludeExclude
-import Amazonka.S3.Sync.Source
-import Amazonka.S3.Sync.Target
 
 data SyncOptions = SyncOptions
   { dryRun :: DryRun
@@ -31,7 +30,7 @@ data SizeOnly = SizeOnly | NotSizeOnly
   deriving stock (Eq, Show)
 
 data SyncArguments
-  = SyncTo SyncSourceLocal SyncTargetRemote
-  | SyncFrom SyncSourceRemote SyncTargetLocal
-  | SyncBetween SyncSourceRemote SyncTargetRemote
+  = SyncTo (Path Abs Dir) (BucketKey Abs Prefix)
+  | SyncFrom (BucketKey Abs Prefix) (Path Abs Dir)
+  | SyncBetween (BucketKey Abs Prefix) (BucketKey Abs Prefix)
   deriving stock (Eq, Show)

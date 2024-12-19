@@ -1,8 +1,8 @@
-{-# LANGUAGE ViewPatterns #-}
-
 module Amazonka.S3.Sync.Options.IncludeExclude
   ( IncludeExclude (..)
   , shouldIncludePath
+  , shouldIncludeText
+  , shouldInclude
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -16,7 +16,13 @@ data IncludeExclude
   deriving stock (Eq, Show)
 
 shouldIncludePath :: Path b t -> [IncludeExclude] -> Bool
-shouldIncludePath (toFilePath -> fpath) =
+shouldIncludePath = shouldInclude . toFilePath
+
+shouldIncludeText :: Text -> [IncludeExclude] -> Bool
+shouldIncludeText = shouldInclude . unpack
+
+shouldInclude :: String -> [IncludeExclude] -> Bool
+shouldInclude fpath =
   fromMaybe True . getLast . foldMap decide
  where
   decide =
