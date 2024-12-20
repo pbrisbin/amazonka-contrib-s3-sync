@@ -29,7 +29,7 @@ sourceRemoteLocal
 sourceRemoteLocal = runSyncLogic remoteLocalLogic
 
 sourceRemoteRemote
-  :: Monad m
+  :: (MonadThrow m, MonadAWS m)
   => BucketKey Abs Prefix
   -> BucketKey Abs Prefix
   -> ConduitT i (These (SyncItem Key Object) (SyncItem Key Object)) m ()
@@ -76,7 +76,8 @@ remoteLocalLogic =
     }
 
 remoteRemoteLogic
-  :: SyncLogic
+  :: (MonadThrow m, MonadAWS m)
+  => SyncLogic
       m
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
@@ -84,4 +85,12 @@ remoteRemoteLogic
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
       (SyncItem Key Object)
-remoteRemoteLogic = undefined
+remoteRemoteLogic =
+  SyncLogic
+    { listSource = listPrefixWithObjectAttributes
+    , listTarget = listPrefixWithObjectAttributes
+    , toSourceItem = syncItemObject
+    , toTargetItem = syncItemObject
+    , compareDir = undefined
+    , compareItem = compareSyncItems
+    }
