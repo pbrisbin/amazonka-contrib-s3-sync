@@ -22,14 +22,14 @@ sourceLocalRemote
 sourceLocalRemote = runSyncLogic localRemoteLogic
 
 sourceRemoteLocal
-  :: Monad m
+  :: (MonadThrow m, MonadDirectory m, MonadAWS m)
   => BucketKey Abs Prefix
   -> Path Abs Dir
   -> ConduitT i (These (SyncItem Key Object) (SyncItem Path File)) m ()
 sourceRemoteLocal = runSyncLogic remoteLocalLogic
 
 sourceRemoteRemote
-  :: Monad m
+  :: (MonadThrow m, MonadAWS m)
   => BucketKey Abs Prefix
   -> BucketKey Abs Prefix
   -> ConduitT i (These (SyncItem Key Object) (SyncItem Key Object)) m ()
@@ -56,7 +56,8 @@ localRemoteLogic =
     }
 
 remoteLocalLogic
-  :: SyncLogic
+  :: (MonadThrow m, MonadDirectory m, MonadAWS m)
+  => SyncLogic
       m
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
@@ -64,10 +65,19 @@ remoteLocalLogic
       (Path Abs Dir)
       (Path Abs File, FileDetails)
       (SyncItem Path File)
-remoteLocalLogic = undefined
+remoteLocalLogic =
+  SyncLogic
+    { listSource = listPrefixWithObjectAttributes
+    , listTarget = listDirWithFileDetails
+    , toSourceItem = syncItemObject
+    , toTargetItem = syncItemFile
+    , compareDir = undefined
+    , compareItem = compareSyncItems
+    }
 
 remoteRemoteLogic
-  :: SyncLogic
+  :: (MonadThrow m, MonadAWS m)
+  => SyncLogic
       m
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
@@ -75,4 +85,12 @@ remoteRemoteLogic
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
       (SyncItem Key Object)
-remoteRemoteLogic = undefined
+remoteRemoteLogic =
+  SyncLogic
+    { listSource = listPrefixWithObjectAttributes
+    , listTarget = listPrefixWithObjectAttributes
+    , toSourceItem = syncItemObject
+    , toTargetItem = syncItemObject
+    , compareDir = undefined
+    , compareItem = compareSyncItems
+    }
