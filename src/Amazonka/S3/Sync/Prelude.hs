@@ -2,7 +2,6 @@
 
 module Amazonka.S3.Sync.Prelude
   ( module X
-  , module Amazonka.S3.Sync.Prelude
   ) where
 
 -- "abs" is a common variable for Abs paths and keys
@@ -46,21 +45,6 @@ import Path as X
   , (</>)
   )
 import System.FilePath.Glob as X (Pattern)
-
-firstM :: (Applicative f, Bitraversable t) => (a -> f a') -> t a b -> f (t a' b)
-firstM f = bimapM f pure
-
-secondM
-  :: (Applicative f, Bitraversable t) => (b -> f b') -> t a b -> f (t a b')
-secondM = bimapM pure
-
-panic :: MonadThrow m => String -> m a
-panic msg =
-  throwM
-    $ userError
-    $ "panic! "
-      <> msg
-      <> ".\nPlease report this at https://github.com/pbrisbin/amazonka-contrib-s3-sync/issues"
 
 instance ToText (Path b t) where
   toText = pack . toFilePath

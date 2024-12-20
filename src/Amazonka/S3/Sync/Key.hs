@@ -23,8 +23,6 @@ module Amazonka.S3.Sync.Key
   , fromRelObject
   , BucketKey (..)
   , inBucket
-  , rootBucketKey
-  , joinBucketKey
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -161,9 +159,3 @@ instance FromText (Key Abs t) => FromText (BucketKey Abs t) where
 
 inBucket :: Key b t -> BucketName -> BucketKey b t
 inBucket k b = BucketKey {bucket = b, key = k}
-
-rootBucketKey :: BucketName -> BucketKey Abs Prefix
-rootBucketKey = (rootKey `inBucket`)
-
-joinBucketKey :: BucketKey b Prefix -> Key Rel t -> BucketKey b t
-joinBucketKey bk key = joinKey bk.key key `inBucket` bk.bucket

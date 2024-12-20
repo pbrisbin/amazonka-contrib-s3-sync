@@ -3,7 +3,6 @@
 module Amazonka.S3.Sync.FileDetails
   ( FileDetails (..)
   , getFileDetails
-  , getFileDetailsIfExists
   , listDirWithFileDetails
   ) where
 
@@ -23,18 +22,9 @@ getFileDetails p = do
     <$> getFileSize p
     <*> getModificationTime p
 
-getFileDetailsIfExists
-  :: MonadDirectory m => Path Abs File -> m (Maybe FileDetails)
-getFileDetailsIfExists p = do
-  exists <- doesFileExist p
-
-  if exists
-    then Just <$> getFileDetails p
-    else pure Nothing
-
 listDirWithFileDetails
   :: MonadDirectory m
   => Path Abs Dir
   -> m ([Path Abs Dir], [(Path Abs File, FileDetails)])
 listDirWithFileDetails =
-  secondM (traverse $ \f -> (f,) <$> getFileDetails f) <=< listDir
+  bimapM pure (traverse $ \f -> (f,) <$> getFileDetails f) <=< listDir
