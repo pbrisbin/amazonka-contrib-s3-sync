@@ -1,3 +1,2 @@
-ignore:
-  {name: "Functor law"}
-  {name: "Use &&"}
+- ignore: {name: "Functor law"}
+- ignore: {name: "Use &&"}

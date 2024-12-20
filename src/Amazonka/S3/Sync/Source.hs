@@ -1,5 +1,3 @@
-{-# LANGUAGE NamedFieldPuns #-}
-
 module Amazonka.S3.Sync.Source
   ( sourceLocalRemote
   , sourceRemoteLocal
