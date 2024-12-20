@@ -22,7 +22,7 @@ sourceLocalRemote
 sourceLocalRemote = runSyncLogic localRemoteLogic
 
 sourceRemoteLocal
-  :: Monad m
+  :: (MonadThrow m, MonadDirectory m, MonadAWS m)
   => BucketKey Abs Prefix
   -> Path Abs Dir
   -> ConduitT i (These (SyncItem Key Object) (SyncItem Path File)) m ()
@@ -56,7 +56,8 @@ localRemoteLogic =
     }
 
 remoteLocalLogic
-  :: SyncLogic
+  :: (MonadThrow m, MonadDirectory m, MonadAWS m)
+  => SyncLogic
       m
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
@@ -64,7 +65,15 @@ remoteLocalLogic
       (Path Abs Dir)
       (Path Abs File, FileDetails)
       (SyncItem Path File)
-remoteLocalLogic = undefined
+remoteLocalLogic =
+  SyncLogic
+    { listSource = listPrefixWithObjectAttributes
+    , listTarget = listDirWithFileDetails
+    , toSourceItem = syncItemObject
+    , toTargetItem = syncItemFile
+    , compareDir = undefined
+    , compareItem = compareSyncItems
+    }
 
 remoteRemoteLogic
   :: SyncLogic
