@@ -214,4 +214,3 @@ spec = do
           `shouldSatisfy` isLeft
 
       describe "rootBucketKey" $ pure ()
-      describe "joinBucketKey" $ pure ()
