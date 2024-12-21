@@ -79,8 +79,7 @@ fileToObject file =
 
 executeAction :: MonadOutput m => SyncOptions -> Action -> m ()
 executeAction options
-  | options.dryRun == DryRun = logAction "(dryrun) "
-  | otherwise = logAction "" -- TODO
-
-logAction :: MonadOutput m => Text -> Action -> m ()
-logAction prefix = puts . (prefix <>) . toText
+  | options.dryRun == DryRun = puts . ("(dryrun) " <>) . toText
+  | otherwise = \action -> do
+      puts $ toText action
+      error "S3 operations not yet implemented"
