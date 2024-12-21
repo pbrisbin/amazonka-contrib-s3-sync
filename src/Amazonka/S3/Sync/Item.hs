@@ -10,11 +10,11 @@ module Amazonka.S3.Sync.Item
 
 import Amazonka.S3.Sync.Prelude
 
+import Amazonka.S3.Sync.CompareKey
 import Amazonka.S3.Sync.FileDetails
 import Amazonka.S3.Sync.Key as Key
 import Amazonka.S3.Sync.ObjectAttributes
 import Path
-import qualified Path.Posix as Posix
 
 data SyncItem (k :: Type -> Type -> Type) (t :: Type) = SyncItem
   { location :: k Rel t
@@ -27,6 +27,9 @@ deriving stock instance Ord (k Rel t) => Ord (SyncItem k t)
 
 instance ToText (k Rel t) => ToText (SyncItem k t) where
   toText = toText . (.location)
+
+instance ToCompareKey (k Rel t) => ToCompareKey (SyncItem k t) where
+  toCompareKey = toCompareKey . (.location)
 
 syncItemFile
   :: MonadThrow m
@@ -46,20 +49,11 @@ syncItemObject bk (o, oa) = do
   location <- Key.stripProperPrefix bk.key o
   pure $ SyncItem {location, size = oa.size, mtime = oa.lastModified}
 
-class ToCompareKey a where
-  toCompareKey :: a -> Text
-
-instance ToCompareKey (SyncItem Path t) where
-  toCompareKey = pack . Posix.toFilePath . (.location)
-
-instance ToCompareKey (SyncItem Key t) where
-  toCompareKey = toText . toObjectKey . (.location)
-
 compareSyncItems
-  :: ( ToCompareKey (SyncItem k1 t1)
-     , ToCompareKey (SyncItem k2 t2)
+  :: ( ToCompareKey (k1 Rel t1)
+     , ToCompareKey (k2 Rel t2)
      )
   => SyncItem k1 t1
   -> SyncItem k2 t2
   -> Ordering
-compareSyncItems a b = toCompareKey a `compare` toCompareKey b
+compareSyncItems = compareOnKey

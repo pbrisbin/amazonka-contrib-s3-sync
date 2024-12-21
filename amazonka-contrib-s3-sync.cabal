@@ -30,6 +30,7 @@ library
       Amazonka.S3.Sync
       Amazonka.S3.Sync.Action
       Amazonka.S3.Sync.ActualIO
+      Amazonka.S3.Sync.CompareKey
       Amazonka.S3.Sync.FileDetails
       Amazonka.S3.Sync.Item
       Amazonka.S3.Sync.Key

@@ -6,13 +6,15 @@ module Amazonka.S3.Sync.Source
 
 import Amazonka.S3.Sync.Prelude
 
+import Amazonka.S3.Sync.CompareKey
 import Amazonka.S3.Sync.FileDetails
 import Amazonka.S3.Sync.Item
-import Amazonka.S3.Sync.Key
+import Amazonka.S3.Sync.Key as Key
 import Amazonka.S3.Sync.Logic
 import Amazonka.S3.Sync.ObjectAttributes
 import Conduit
 import Control.Monad.Directory
+import Path
 
 sourceLocalRemote
   :: (MonadThrow m, MonadDirectory m, MonadAWS m)
@@ -51,7 +53,7 @@ localRemoteLogic =
     , listTarget = listPrefixWithObjectAttributes
     , toSourceItem = syncItemFile
     , toTargetItem = syncItemObject
-    , compareDir = undefined
+    , compareDir = compareDirPrefix
     , compareItem = compareSyncItems
     }
 
@@ -71,7 +73,7 @@ remoteLocalLogic =
     , listTarget = listDirWithFileDetails
     , toSourceItem = syncItemObject
     , toTargetItem = syncItemFile
-    , compareDir = undefined
+    , compareDir = comparePrefixDir
     , compareItem = compareSyncItems
     }
 
@@ -91,6 +93,42 @@ remoteRemoteLogic =
     , listTarget = listPrefixWithObjectAttributes
     , toSourceItem = syncItemObject
     , toTargetItem = syncItemObject
-    , compareDir = undefined
+    , compareDir = comparePrefixPrefix
     , compareItem = compareSyncItems
     }
+
+compareDirPrefix
+  :: MonadThrow m
+  => Path Abs Dir
+  -> BucketKey Abs Prefix
+  -> Path Abs Dir
+  -> BucketKey Abs Prefix
+  -> m Ordering
+compareDirPrefix source target s t = do
+  compareOnKey
+    <$> Path.stripProperPrefix source s
+    <*> Key.stripProperPrefix target.key t.key
+
+comparePrefixDir
+  :: MonadThrow m
+  => BucketKey Abs Prefix
+  -> Path Abs Dir
+  -> BucketKey Abs Prefix
+  -> Path Abs Dir
+  -> m Ordering
+comparePrefixDir source target s t = do
+  compareOnKey
+    <$> Key.stripProperPrefix source.key s.key
+    <*> Path.stripProperPrefix target t
+
+comparePrefixPrefix
+  :: MonadThrow m
+  => BucketKey Abs Prefix
+  -> BucketKey Abs Prefix
+  -> BucketKey Abs Prefix
+  -> BucketKey Abs Prefix
+  -> m Ordering
+comparePrefixPrefix source target s t = do
+  compareOnKey
+    <$> Key.stripProperPrefix source.key s.key
+    <*> Key.stripProperPrefix target.key t.key
