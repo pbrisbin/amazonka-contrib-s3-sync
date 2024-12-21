@@ -30,16 +30,19 @@ library
       Amazonka.S3.Sync
       Amazonka.S3.Sync.Action
       Amazonka.S3.Sync.ActualIO
+      Amazonka.S3.Sync.CompareKey
       Amazonka.S3.Sync.FileDetails
+      Amazonka.S3.Sync.Item
       Amazonka.S3.Sync.Key
+      Amazonka.S3.Sync.Logic
       Amazonka.S3.Sync.ObjectAttributes
       Amazonka.S3.Sync.Options
       Amazonka.S3.Sync.Options.IncludeExclude
-      Amazonka.S3.Sync.PairedItem
+      Amazonka.S3.Sync.PairUp
       Amazonka.S3.Sync.Prelude
+      Amazonka.S3.Sync.Source
       Control.Monad.Directory
       Control.Monad.Output
-      Control.Monad.PathsRef
   other-modules:
       Paths_amazonka_contrib_s3_sync
   hs-source-dirs:
@@ -71,7 +74,7 @@ library
       StandaloneDeriving
       TypeApplications
       TypeFamilies
-  ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
+  ghc-options: -fwrite-ide-info -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe
   build-depends:
       Blammo
     , Glob
@@ -82,14 +85,13 @@ library
     , amazonka-s3
     , base <5
     , conduit
-    , containers
     , errors
     , exceptions
-    , filepath
     , microlens
     , path
     , path-io
     , text
+    , these
     , time
     , unliftio
     , unliftio-core
@@ -132,7 +134,7 @@ executable amazonka-contrib-s3-sync-example
       StandaloneDeriving
       TypeApplications
       TypeFamilies
-  ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts -with-rtsopts=-N
+  ghc-options: -fwrite-ide-info -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts -with-rtsopts=-N
   build-depends:
       amazonka
     , amazonka-contrib-s3-sync
@@ -184,14 +186,13 @@ test-suite spec
       StandaloneDeriving
       TypeApplications
       TypeFamilies
-  ghc-options: -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts "-with-rtsopts=-N"
+  ghc-options: -fwrite-ide-info -Weverything -Wno-all-missed-specialisations -Wno-missed-specialisations -Wno-missing-exported-signatures -Wno-missing-import-lists -Wno-missing-local-signatures -Wno-monomorphism-restriction -Wno-safe -Wno-unsafe -threaded -rtsopts "-with-rtsopts=-N"
   build-depends:
       amazonka-contrib-s3-sync
     , amazonka-mtl
     , amazonka-s3
     , base <5
     , containers
-    , exceptions
     , hspec
     , mtl
     , path

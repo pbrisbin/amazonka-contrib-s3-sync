@@ -1,6 +1,9 @@
+{-# LANGUAGE TupleSections #-}
+
 module Amazonka.S3.Sync.FileDetails
   ( FileDetails (..)
   , getFileDetails
+  , listDirWithFileDetails
   ) where
 
 import Amazonka.S3.Sync.Prelude
@@ -13,14 +16,15 @@ data FileDetails = FileDetails
   }
   deriving stock (Eq, Show)
 
-getFileDetails :: MonadDirectory m => Path Abs File -> m (Maybe FileDetails)
+getFileDetails :: MonadDirectory m => Path Abs File -> m FileDetails
 getFileDetails p = do
-  exists <- doesFileExist p
+  FileDetails
+    <$> getFileSize p
+    <*> getModificationTime p
 
-  if exists
-    then
-      fmap Just
-        $ FileDetails
-        <$> getFileSize p
-        <*> getModificationTime p
-    else pure Nothing
+listDirWithFileDetails
+  :: MonadDirectory m
+  => Path Abs Dir
+  -> m ([Path Abs Dir], [(Path Abs File, FileDetails)])
+listDirWithFileDetails =
+  bimapM pure (traverse $ \f -> (f,) <$> getFileDetails f) <=< listDir

@@ -18,13 +18,11 @@ main = do
   src <- (</> [reldir|./src|]) <$> getCurrentDir
   dst <- either die pure $ fromText "s3://files.pbrisbin.com/docs/"
 
-  syncLocalRemote
-    env
-    SyncOptions
+  sync env
+    $ SyncOptions
       { dryRun = DryRun
       , includeExcludes = []
       , delete = Delete
       , sizeOnly = NotSizeOnly
+      , arguments = SyncTo src dst
       }
-    src
-    dst

@@ -12,7 +12,6 @@ module Amazonka.S3.Sync.Mocks
 import Amazonka.S3.Sync.Prelude
 
 import qualified Amazonka.S3.ListObjectsV2 as S3
-import Amazonka.S3.Sync.ActualIO
 import Amazonka.S3.Sync.FileDetails
 import Amazonka.S3.Sync.Key (BucketKey, Object, toObjectKey)
 import qualified Amazonka.S3.Sync.Key as Key
@@ -21,10 +20,8 @@ import qualified Amazonka.S3.Types.Object as S3
 import qualified Amazonka.S3.Types.ObjectStorageClass as S3
 import Control.Monad.AWS.Matchers
 import Control.Monad.AWS.ViaMock
-import Control.Monad.Catch (MonadThrow)
 import Control.Monad.Directory
 import Control.Monad.Output
-import Control.Monad.PathsRef
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks, runReader)
 import Data.Char (isDigit)
 import Data.List (nub)
@@ -49,7 +46,6 @@ newtype MocksM a = MocksM
     , MonadThrow
     , MonadReader Mocks
     )
-  deriving (MonadPathsRef) via (ActualIO MocksM)
   deriving (MonadAWS) via (MockAWS MocksM)
 
 instance MonadOutput MocksM where

@@ -22,21 +22,19 @@ module Amazonka.S3.Sync.Key
   , fromAbsObject
   , fromRelObject
   , BucketKey (..)
-  , rootBucketKey
-  , joinBucketKey
+  , inBucket
   ) where
 
 import Amazonka.S3.Sync.Prelude
 
 import Amazonka.S3.Types (BucketName, ObjectKey (..))
-import Control.Monad.Catch (MonadThrow (..))
 import qualified Data.Text as T
 import UnliftIO.Exception (Exception)
 
 newtype Key b t = Key
   { unwrap :: Text
   }
-  deriving stock (Show, Eq)
+  deriving stock (Show, Eq, Ord)
   deriving newtype (ToText)
 
 instance FromText (Key Abs Prefix) where
@@ -144,9 +142,9 @@ data BucketKey b t = BucketKey
   { bucket :: BucketName
   , key :: Key b t
   }
-  deriving stock (Eq, Show)
+  deriving stock (Show, Eq, Ord)
 
-instance ToText (Key Abs t) => ToText (BucketKey Abs t) where
+instance ToText (Key b t) => ToText (BucketKey b t) where
   toText bk = "s3://" <> toText bk.bucket <> toText bk.key
 
 instance FromText (Key Abs t) => FromText (BucketKey Abs t) where
@@ -159,16 +157,5 @@ instance FromText (Key Abs t) => FromText (BucketKey Abs t) where
    where
     invalid msg = unpack t <> " is not valid as s3://<bucket>[/<key>]: " <> msg
 
-rootBucketKey :: BucketName -> BucketKey Abs Prefix
-rootBucketKey bucket =
-  BucketKey
-    { bucket = bucket
-    , key = rootKey
-    }
-
-joinBucketKey :: BucketKey b Prefix -> Key Rel t -> BucketKey b t
-joinBucketKey bk key =
-  BucketKey
-    { bucket = bk.bucket
-    , key = joinKey bk.key key
-    }
+inBucket :: Key b t -> BucketName -> BucketKey b t
+inBucket k b = BucketKey {bucket = b, key = k}
