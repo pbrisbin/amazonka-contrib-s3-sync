@@ -8,6 +8,7 @@ module Amazonka.S3.Sync.Action
 
 import Amazonka.S3.Sync.Prelude
 
+import Amazonka.S3.Sync.CompareKey
 import Amazonka.S3.Sync.Item
 import Amazonka.S3.Sync.Key
 import Amazonka.S3.Sync.Options
@@ -74,8 +75,7 @@ fileToObject file =
   either (error . show) id
     $ parseRelObject
     $ ObjectKey
-    $ pack
-    $ toFilePath file
+    $ toCompareKey file
 
 executeAction :: MonadOutput m => SyncOptions -> Action -> m ()
 executeAction options

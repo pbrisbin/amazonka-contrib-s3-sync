@@ -6,8 +6,6 @@ module Amazonka.S3.Sync.CompareKey
 import Amazonka.S3.Sync.Prelude
 
 import Amazonka.S3.Sync.Key as Key
-import Path
-
 import qualified Path.Posix as Posix
 
 class ToCompareKey a where
