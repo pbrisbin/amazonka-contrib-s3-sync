@@ -33,8 +33,8 @@ instance ToCompareKey (k Rel t) => ToCompareKey (SyncItem k t) where
 
 syncItemFile
   :: MonadThrow m
-  => Path Abs Dir
-  -> (Path Abs File, FileDetails)
+  => Path b Dir
+  -> (Path b File, FileDetails)
   -> m (SyncItem Path File)
 syncItemFile dir (f, fd) = do
   location <- Path.stripProperPrefix dir f

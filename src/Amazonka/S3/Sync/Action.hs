@@ -16,10 +16,10 @@ import Amazonka.S3.Types (ObjectKey (..))
 import Control.Monad.Output
 
 data Action
-  = DeleteFile (Path Abs File)
+  = DeleteFile (Path Rel File)
   | DeleteObject (BucketKey Abs Object)
-  | CopyObjectToFile (BucketKey Abs Object) (Path Abs File)
-  | CopyFileToObject (Path Abs File) (BucketKey Abs Object)
+  | CopyObjectToFile (BucketKey Abs Object) (Path Rel File)
+  | CopyFileToObject (Path Rel File) (BucketKey Abs Object)
   | CopyObjectToObject (BucketKey Abs Object) (BucketKey Abs Object)
   deriving stock (Eq, Show)
 
@@ -36,7 +36,7 @@ instance ToText Action where
 {- FOURMOLU_ENABLE -}
 
 actionLocalRemote
-  :: Path Abs Dir
+  :: Path Rel Dir
   -> BucketKey Abs Prefix
   -> These (SyncItem Path File) (SyncItem Key Object)
   -> Action
@@ -50,7 +50,7 @@ actionLocalRemote =
 
 actionRemoteLocal
   :: BucketKey Abs Prefix
-  -> Path Abs Dir
+  -> Path Rel Dir
   -> These (SyncItem Key Object) (SyncItem Path File)
   -> Action
 actionRemoteLocal =
@@ -75,13 +75,13 @@ actionRemoteRemote =
     CopyObjectToObject
 
 actionLogic
-  :: (sBucketKey Abs sPrefix -> sKey Rel sObject -> sBucketKey Abs sObject)
-  -> (tBucketKey Abs tPrefix -> tKey Rel tObject -> tBucketKey Abs tObject)
+  :: (sBucketKey sAbs sPrefix -> sKey Rel sObject -> sBucketKey sAbs sObject)
+  -> (tBucketKey tAbs tPrefix -> tKey Rel tObject -> tBucketKey tAbs tObject)
   -> (sKey Rel sObject -> tKey Rel tObject)
-  -> (tBucketKey Abs tObject -> Action)
-  -> (sBucketKey Abs sObject -> tBucketKey Abs tObject -> Action)
-  -> sBucketKey Abs sPrefix
-  -> tBucketKey Abs tPrefix
+  -> (tBucketKey tAbs tObject -> Action)
+  -> (sBucketKey sAbs sObject -> tBucketKey tAbs tObject -> Action)
+  -> sBucketKey sAbs sPrefix
+  -> tBucketKey tAbs tPrefix
   -> These (SyncItem sKey sObject) (SyncItem tKey tObject)
   -> Action
 actionLogic inSourceFn inTargetFn transFn deleteFn copyFn source target = \case

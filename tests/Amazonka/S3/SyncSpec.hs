@@ -11,11 +11,11 @@ import Amazonka.S3.Sync.Key
 import Amazonka.S3.Sync.Mocks
 import Amazonka.S3.Sync.Options
 import Amazonka.S3.Sync.Options.IncludeExclude
-import Path (absdir)
+import Path (reldir)
 import Test.Hspec
 
-src :: Path Abs Dir
-src = [absdir|/src/|]
+src :: Path Rel Dir
+src = [reldir|./src/|]
 
 dst :: HasCallStack => BucketKey Abs Prefix
 dst = either error id $ fromText "s3://bucket/dst/"

@@ -97,7 +97,6 @@ executables:
       - amazonka-core
       - amazonka-contrib-s3-sync
       - path
-      - path-io
     ghc-options:
       - -threaded
       - -rtsopts
