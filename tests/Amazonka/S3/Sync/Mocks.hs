@@ -24,17 +24,16 @@ import Control.Monad.Directory
 import Control.Monad.Output
 import Control.Monad.Reader (MonadReader (..), ReaderT (..), asks, runReader)
 import Data.Char (isDigit)
+import Data.List (nub)
 import Data.List.NonEmpty (nonEmpty)
 import qualified Data.List.NonEmpty as NE
 import Data.Map.Strict (Map)
 import qualified Data.Map.Strict as Map
 import Data.Time.Format.ISO8601 (formatReadP, iso8601Format)
+import Path (parent, stripProperPrefix)
 import Test.Hspec
 import Text.ParserCombinators.ReadP
 import qualified Prelude as Unsafe (read)
-
--- import Data.List (nub)
--- import Path (parent, stripProperPrefix)
 
 newtype MocksM a = MocksM
   { unwrap :: ReaderT Mocks IO a
@@ -53,17 +52,16 @@ instance MonadOutput MocksM where
   puts _ = pure ()
 
 instance MonadDirectory MocksM where
-  -- listDir d = asks $ first nub . foldMap go . Map.keys . (.dir)
-  --  where
-  --   go :: Path Abs File -> ([Path Abs Dir], [Path Abs File])
-  --   go file
-  --     | parent file == d = ([], [file])
-  --     | Just _ <- stripProperPrefix d file = error "TODO"
-  --     | otherwise = ([], [])
+  listDirRel d = asks $ first nub . foldMap go . Map.keys . (.dir)
+   where
+    d' = forceRelDir d
+    go :: Path Rel File -> ([Path Rel Dir], [Path Rel File])
+    go file
+      | parent file == d' = ([], [file])
+      | Just _ <- stripProperPrefix d' file = error "TODO"
+      | otherwise = ([], [])
 
-  listDir = undefined
-  listDirRel = undefined
-  doesFileExist f = asks $ Map.member (toFilePath f) . (.dir)
+  doesFileExist f = asks $ Map.member (forceRelFile f) . (.dir)
   getFileSize = getFileDetail (.size)
   getModificationTime = getFileDetail (.mtime)
 
@@ -72,7 +70,7 @@ getFileDetail
   => (FileDetails -> a)
   -> Path b File
   -> m a
-getFileDetail attr f = asks $ maybe err attr . Map.lookup (toFilePath f) . (.dir)
+getFileDetail attr f = asks $ maybe err attr . Map.lookup (forceRelFile f) . (.dir)
  where
   err =
     error
@@ -80,18 +78,24 @@ getFileDetail attr f = asks $ maybe err attr . Map.lookup (toFilePath f) . (.dir
         <> toFilePath f
         <> ", which is not present in mocks"
 
+forceRelDir :: Path b Dir -> Path Rel Dir
+forceRelDir = either (error . show) id . parseRelDir . toFilePath
+
+forceRelFile :: Path b File -> Path Rel File
+forceRelFile = either (error . show) id . parseRelFile . toFilePath
+
 runMocksM :: MocksM a -> Mocks -> IO a
 runMocksM f = runReaderT f.unwrap
 
 data Mocks = Mocks
-  { dir :: Map FilePath FileDetails
+  { dir :: Map (Path Rel File) FileDetails
   , aws :: Matchers
   }
 
 instance HasMatchers Mocks where
   matchersL = lens (.aws) $ \x y -> x {aws = y}
 
-mockDir :: [String] -> IO (Map FilePath FileDetails)
+mockDir :: [String] -> IO (Map (Path Rel File) FileDetails)
 mockDir = fmap Map.fromList . traverse (parse dirP)
 
 mockAWS :: [String] -> IO Matchers
@@ -130,16 +134,16 @@ parse p s =
     expectationFailure $ "The line " <> s <> " failed to parse"
     error "unreachable"
 
-dirP :: ReadP (FilePath, FileDetails)
+dirP :: ReadP (Path Rel File, FileDetails)
 dirP =
   (,)
     <$> (pathP <* char ' ' <* skipSpaces)
     <*> fileDetailsP
 
-pathP :: ReadP FilePath
+pathP :: ReadP (Path Rel File)
 pathP = do
   s <- many1 anyChar
-  toFilePath <$> eitherParser parseAbsFile s
+  eitherParser parseRelFile s
 
 fileDetailsP :: ReadP FileDetails
 fileDetailsP =
