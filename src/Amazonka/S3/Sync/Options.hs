@@ -30,7 +30,7 @@ data SizeOnly = SizeOnly | NotSizeOnly
   deriving stock (Eq, Show)
 
 data SyncArguments
-  = SyncTo (Path Abs Dir) (BucketKey Abs Prefix)
-  | SyncFrom (BucketKey Abs Prefix) (Path Abs Dir)
+  = SyncTo (Path Rel Dir) (BucketKey Abs Prefix)
+  | SyncFrom (BucketKey Abs Prefix) (Path Rel Dir)
   | SyncBetween (BucketKey Abs Prefix) (BucketKey Abs Prefix)
   deriving stock (Eq, Show)

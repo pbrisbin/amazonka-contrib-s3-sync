@@ -16,7 +16,7 @@ data FileDetails = FileDetails
   }
   deriving stock (Eq, Show)
 
-getFileDetails :: MonadDirectory m => Path Abs File -> m FileDetails
+getFileDetails :: MonadDirectory m => Path b File -> m FileDetails
 getFileDetails p = do
   FileDetails
     <$> getFileSize p
@@ -24,7 +24,7 @@ getFileDetails p = do
 
 listDirWithFileDetails
   :: MonadDirectory m
-  => Path Abs Dir
-  -> m ([Path Abs Dir], [(Path Abs File, FileDetails)])
+  => Path Rel Dir
+  -> m ([Path Rel Dir], [(Path Rel File, FileDetails)])
 listDirWithFileDetails =
-  bimapM pure (traverse $ \f -> (f,) <$> getFileDetails f) <=< listDir
+  bimapM pure (traverse $ \f -> (f,) <$> getFileDetails f) <=< listDirRel

@@ -141,7 +141,6 @@ executable amazonka-contrib-s3-sync-example
     , amazonka-core
     , base <5
     , path
-    , path-io
   default-language: Haskell2010
   if impl(ghc >= 9.2)
     ghc-options: -Wno-missing-kind-signatures

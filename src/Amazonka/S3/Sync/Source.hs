@@ -18,7 +18,7 @@ import Path
 
 sourceLocalRemote
   :: (MonadThrow m, MonadDirectory m, MonadAWS m)
-  => Path Abs Dir
+  => Path Rel Dir
   -> BucketKey Abs Prefix
   -> ConduitT i (These (SyncItem Path File) (SyncItem Key Object)) m ()
 sourceLocalRemote = runSyncLogic localRemoteLogic
@@ -26,7 +26,7 @@ sourceLocalRemote = runSyncLogic localRemoteLogic
 sourceRemoteLocal
   :: (MonadThrow m, MonadDirectory m, MonadAWS m)
   => BucketKey Abs Prefix
-  -> Path Abs Dir
+  -> Path Rel Dir
   -> ConduitT i (These (SyncItem Key Object) (SyncItem Path File)) m ()
 sourceRemoteLocal = runSyncLogic remoteLocalLogic
 
@@ -41,8 +41,8 @@ localRemoteLogic
   :: (MonadThrow m, MonadDirectory m, MonadAWS m)
   => SyncLogic
       m
-      (Path Abs Dir)
-      (Path Abs File, FileDetails)
+      (Path Rel Dir)
+      (Path Rel File, FileDetails)
       (SyncItem Path File)
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
@@ -64,8 +64,8 @@ remoteLocalLogic
       (BucketKey Abs Prefix)
       (Key Abs Object, ObjectAttributes)
       (SyncItem Key Object)
-      (Path Abs Dir)
-      (Path Abs File, FileDetails)
+      (Path Rel Dir)
+      (Path Rel File, FileDetails)
       (SyncItem Path File)
 remoteLocalLogic =
   SyncLogic
@@ -99,9 +99,9 @@ remoteRemoteLogic =
 
 compareDirPrefix
   :: MonadThrow m
-  => Path Abs Dir
+  => Path Rel Dir
   -> BucketKey Abs Prefix
-  -> Path Abs Dir
+  -> Path Rel Dir
   -> BucketKey Abs Prefix
   -> m Ordering
 compareDirPrefix source target s t = do
@@ -112,9 +112,9 @@ compareDirPrefix source target s t = do
 comparePrefixDir
   :: MonadThrow m
   => BucketKey Abs Prefix
-  -> Path Abs Dir
+  -> Path Rel Dir
   -> BucketKey Abs Prefix
-  -> Path Abs Dir
+  -> Path Rel Dir
   -> m Ordering
 comparePrefixDir source target s t = do
   compareOnKey

@@ -26,6 +26,7 @@ instance MonadIO m => MonadThrow (ActualIO m) where
 
 instance MonadIO m => MonadDirectory (ActualIO m) where
   listDir = Path.listDir
+  listDirRel = Path.listDirRel
   doesFileExist = Path.doesFileExist
   getFileSize = Path.getFileSize
   getModificationTime = Path.getModificationTime
