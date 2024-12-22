@@ -1,6 +1,5 @@
 module Amazonka.S3.Sync.ObjectAttributes
   ( ObjectAttributes (..)
-  , getObjectAttributes
   , listPrefixWithObjectAttributes
   )
 where
@@ -29,13 +28,6 @@ data ObjectAttributes = ObjectAttributes
   }
   deriving stock (Eq, Show, Generic)
   deriving anyclass (ToJSON)
-
-getObjectAttributes :: S3.Object -> ObjectAttributes
-getObjectAttributes obj =
-  ObjectAttributes
-    { size = obj ^. object_size
-    , lastModified = obj ^. object_lastModified
-    }
 
 listPrefixWithObjectAttributes
   :: (MonadThrow m, MonadAWS m)
@@ -84,6 +76,13 @@ responseToEither bk = awaitForever $ \r -> do
       unless isPrefixKey $ do
         rel <- parseRelObject $ obj ^. object_key
         yield $ Right (joinKey rootKey rel, getObjectAttributes obj)
+
+getObjectAttributes :: S3.Object -> ObjectAttributes
+getObjectAttributes obj =
+  ObjectAttributes
+    { size = obj ^. object_size
+    , lastModified = obj ^. object_lastModified
+    }
 
 eitherToResult :: Monad m => ConduitT (Either a b) ([a], [b]) m ()
 eitherToResult =
