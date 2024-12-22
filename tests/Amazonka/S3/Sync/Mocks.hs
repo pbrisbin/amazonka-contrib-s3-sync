@@ -54,35 +54,28 @@ instance MonadOutput MocksM where
 instance MonadDirectory MocksM where
   listDirRel d = asks $ first nub . foldMap go . Map.keys . (.dir)
    where
-    d' = forceRelDir d
     go :: Path Rel File -> ([Path Rel Dir], [Path Rel File])
     go file
-      | parent file == d' = ([], [file])
-      | Just _ <- stripProperPrefix d' file = error "TODO"
+      | parent file == d = ([], [file])
+      | Just _ <- stripProperPrefix d file = error "TODO"
       | otherwise = ([], [])
 
-  doesFileExist f = asks $ Map.member (forceRelFile f) . (.dir)
+  doesFileExist f = asks $ Map.member f . (.dir)
   getFileSize = getFileDetail (.size)
   getModificationTime = getFileDetail (.mtime)
 
 getFileDetail
   :: MonadReader Mocks m
   => (FileDetails -> a)
-  -> Path b File
+  -> Path Rel File
   -> m a
-getFileDetail attr f = asks $ maybe err attr . Map.lookup (forceRelFile f) . (.dir)
+getFileDetail attr f = asks $ maybe err attr . Map.lookup f . (.dir)
  where
   err =
     error
       $ "operation attempted on "
         <> toFilePath f
         <> ", which is not present in mocks"
-
-forceRelDir :: Path b Dir -> Path Rel Dir
-forceRelDir = either (error . show) id . parseRelDir . toFilePath
-
-forceRelFile :: Path b File -> Path Rel File
-forceRelFile = either (error . show) id . parseRelFile . toFilePath
 
 runMocksM :: MocksM a -> Mocks -> IO a
 runMocksM f = runReaderT f.unwrap
