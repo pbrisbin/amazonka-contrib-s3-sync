@@ -25,7 +25,9 @@ instance MonadIO m => MonadThrow (ActualIO m) where
   throwM = liftIO . throwM
 
 instance MonadIO m => MonadDirectory (ActualIO m) where
-  listDirRel = Path.listDirRel
+  listDirRel d = do
+    contents <- Path.listDirRel d
+    pure $ bimap (map (d </>)) (map (d </>)) contents
   doesFileExist = Path.doesFileExist
   getFileSize = Path.getFileSize
   getModificationTime = Path.getModificationTime

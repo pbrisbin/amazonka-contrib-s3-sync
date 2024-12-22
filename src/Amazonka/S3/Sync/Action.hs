@@ -18,22 +18,18 @@ import Control.Monad.Output
 data Action
   = DeleteFile (Path Rel File)
   | DeleteObject (BucketKey Abs Object)
-  | CopyObjectToFile (BucketKey Abs Object) (Path Rel File)
-  | CopyFileToObject (Path Rel File) (BucketKey Abs Object)
-  | CopyObjectToObject (BucketKey Abs Object) (BucketKey Abs Object)
+  | Download (BucketKey Abs Object) (Path Rel File)
+  | Upload (Path Rel File) (BucketKey Abs Object)
+  | Copy (BucketKey Abs Object) (BucketKey Abs Object)
   deriving stock (Eq, Show)
-
-{- FOURMOLU_DISABLE -}
 
 instance ToText Action where
   toText = \case
-    DeleteFile a           -> "delete:   " <> toText a
-    DeleteObject a         -> "delete:   " <> toText a
-    CopyObjectToFile a b   -> "download: " <> toText a <> " to " <> toText b
-    CopyFileToObject a b   -> "upload:   " <> toText a <> " to " <> toText b
-    CopyObjectToObject a b -> "copy:     " <> toText a <> " to " <> toText b
-
-{- FOURMOLU_ENABLE -}
+    DeleteFile a -> "delete: " <> toText a
+    DeleteObject a -> "delete: " <> toText a
+    Download a b -> "download: " <> toText a <> " to " <> toText b
+    Upload a b -> "upload: " <> toText a <> " to " <> toText b
+    Copy a b -> "copy: " <> toText a <> " to " <> toText b
 
 actionLocalRemote
   :: Path Rel Dir
@@ -46,7 +42,7 @@ actionLocalRemote =
     (\bk k -> joinKey bk.key k `inBucket` bk.bucket)
     fileToObject
     DeleteObject
-    CopyFileToObject
+    Upload
 
 actionRemoteLocal
   :: BucketKey Abs Prefix
@@ -59,7 +55,7 @@ actionRemoteLocal =
     (</>)
     objectToFile
     DeleteFile
-    CopyObjectToFile
+    Download
 
 actionRemoteRemote
   :: BucketKey Abs Prefix
@@ -72,7 +68,7 @@ actionRemoteRemote =
     (\bk k -> joinKey bk.key k `inBucket` bk.bucket)
     id
     DeleteObject
-    CopyObjectToObject
+    Copy
 
 actionLogic
   :: (sBucketKey sAbs sPrefix -> sKey Rel sObject -> sBucketKey sAbs sObject)

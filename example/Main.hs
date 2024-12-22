@@ -13,7 +13,7 @@ import Path (reldir)
 main :: IO ()
 main = do
   let
-    src = [reldir|./src|]
+    src = [reldir|src/|]
     dst = either (error . show) id $ fromText "s3://files.pbrisbin.com/docs/"
 
   env <- Amazonka.newEnv Amazonka.discover

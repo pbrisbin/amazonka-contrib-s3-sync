@@ -53,26 +53,26 @@ spec = do
         let options = baseOptions
 
         fmap (map toText) (runMocksM (syncM options) mocks)
-          `shouldReturn` [ "upload:   src/bar.txt to s3://bucket/dst/bar.txt"
-                         , "upload:   src/foo.txt to s3://bucket/dst/foo.txt"
+          `shouldReturn` [ "upload: src/bar.txt to s3://bucket/dst/bar.txt"
+                         , "upload: src/foo.txt to s3://bucket/dst/foo.txt"
                          ]
 
       it "works with size-only" $ do
         let options = baseOptions {sizeOnly = SizeOnly}
 
         fmap (map toText) (runMocksM (syncM options) mocks)
-          `shouldReturn` [ "upload:   src/bar.txt to s3://bucket/dst/bar.txt"
-                         , "upload:   src/foo.txt to s3://bucket/dst/foo.txt"
-                         , "upload:   src/fox.txt to s3://bucket/dst/fox.txt"
+          `shouldReturn` [ "upload: src/bar.txt to s3://bucket/dst/bar.txt"
+                         , "upload: src/foo.txt to s3://bucket/dst/foo.txt"
+                         , "upload: src/fox.txt to s3://bucket/dst/fox.txt"
                          ]
 
       it "works with delete" $ do
         let options = baseOptions {delete = Delete}
 
         fmap (map toText) (runMocksM (syncM options) mocks)
-          `shouldReturn` [ "upload:   src/bar.txt to s3://bucket/dst/bar.txt"
-                         , "delete:   s3://bucket/dst/baz.txt"
-                         , "upload:   src/foo.txt to s3://bucket/dst/foo.txt"
+          `shouldReturn` [ "upload: src/bar.txt to s3://bucket/dst/bar.txt"
+                         , "delete: s3://bucket/dst/baz.txt"
+                         , "upload: src/foo.txt to s3://bucket/dst/foo.txt"
                          ]
 
       it "works with include-excludes" $ do
@@ -81,6 +81,6 @@ spec = do
         let options = baseOptions {includeExcludes = [Exclude "fo*.txt", Include "fox.txt"]}
 
         fmap (map toText) (runMocksM (syncM options) mocks)
-          `shouldReturn` [ "upload:   src/bar.txt to s3://bucket/dst/bar.txt"
-                         , "upload:   src/fox.txt to s3://bucket/dst/fox.txt"
+          `shouldReturn` [ "upload: src/bar.txt to s3://bucket/dst/bar.txt"
+                         , "upload: src/fox.txt to s3://bucket/dst/fox.txt"
                          ]

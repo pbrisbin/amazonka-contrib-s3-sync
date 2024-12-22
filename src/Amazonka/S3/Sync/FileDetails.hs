@@ -16,7 +16,7 @@ data FileDetails = FileDetails
   }
   deriving stock (Eq, Show)
 
-getFileDetails :: MonadDirectory m => Path b File -> m FileDetails
+getFileDetails :: MonadDirectory m => Path Rel File -> m FileDetails
 getFileDetails p = do
   FileDetails
     <$> getFileSize p
