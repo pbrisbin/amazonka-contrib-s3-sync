@@ -13,10 +13,10 @@ far.
 
 ### Logic
 
-| From/To | Local | Remote             |
-| ------- | ----- | ------------------ |
-| Local   | :x:   | :heavy_check_mark: |
-| Remote  | :x:   | :x:                |
+| From/To | Local              | Remote             |
+| ------- | ------------------ | ------------------ |
+| Local   | N/A                | :heavy_check_mark: |
+| Remote  | :heavy_check_mark: | :heavy_check_mark: |
 
 ### Actions
 
