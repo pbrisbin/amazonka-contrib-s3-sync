@@ -42,34 +42,29 @@ includeExcludesParser =
 
 argumentsParser :: Parser SyncArguments
 argumentsParser =
-  syncToParser
-    <|> syncFromParser
-    <|> syncBetweenParser
-    <|> failParser "TODO"
+  go
+    <$> argumentParser
+    <*> argumentParser
+ where
+  go = curry $ \case
+    (Left d, Right p) -> SyncTo d p
+    (Right p, Left d) -> SyncFrom p d
+    (Right a, Right b) -> SyncBetween a b
+    _ -> error "amazonka-sync-s3 cannot be used with LocalPath LocalPath (try rsync)"
 
-syncToParser :: Parser SyncArguments
-syncToParser =
-  SyncTo
-    <$> relDirParser
-    <*> bucketPrefixParser
+argumentParser :: Parser (Either (Path Rel Dir) (BucketKey Abs Prefix))
+argumentParser = argument (eitherReader argumentReader) (metavar "LocalPath|S3Uri")
 
-syncFromParser :: Parser SyncArguments
-syncFromParser =
-  SyncFrom
-    <$> bucketPrefixParser
-    <*> relDirParser
-
-syncBetweenParser :: Parser SyncArguments
-syncBetweenParser =
-  SyncBetween
-    <$> bucketPrefixParser
-    <*> bucketPrefixParser
-
-relDirParser :: Parser (Path Rel Dir)
-relDirParser = argument (eitherReader $ first show . parseRelDir) (metavar "LocalPath")
-
-bucketPrefixParser :: Parser (BucketKey Abs Prefix)
-bucketPrefixParser = argument (eitherReader $ fromText . pack) (metavar "S3Uri")
-
-failParser :: String -> Parser a
-failParser msg = error "unreachable" <$> infoOption msg mempty
+argumentReader
+  :: String -> Either String (Either (Path Rel Dir) (BucketKey Abs Prefix))
+argumentReader s =
+  case (first show $ parseRelDir s, fromText $ pack s) of
+    (_, Right p) -> Right (Right p)
+    (Right d, _) -> Right (Left d)
+    (Left a, Left b) ->
+      Left
+        $ "argument did not parse as LocalPath or S3Uri: "
+          <> "\n as LocalPath: "
+          <> a
+          <> "\n as S3URI: "
+          <> b
