@@ -5,7 +5,7 @@ tmp=$(mktemp -d)
 trap 'rm -rf "$tmp"' EXIT
 
 _tc() {
-  local name=$1
+  local name="$1"
   shift
 
   printf ':: %s ' "$name"
